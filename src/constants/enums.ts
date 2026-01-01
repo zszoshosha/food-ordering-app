@@ -1,3 +1,8 @@
+/**
+ * Application constants and enums.
+ * Defines directions, languages, routes, pages, input types, and environments.
+ */
+
 export enum Directions {
   RTL = "rtl",
   LTR = "ltr",

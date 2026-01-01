@@ -5,6 +5,9 @@ import { Pages, Routes } from "@/constants/enums";
 import { Button, buttonVariants } from "../ui/button";
 import { Menu, XIcon } from "lucide-react";
 
+/**
+ * Navigation links for the site.
+ */
 const links = [
   { id: crypto.randomUUID(), title: "Menu", href: Routes.MENU },
   { id: crypto.randomUUID(), title: "About", href: Routes.ABOUT },
@@ -16,6 +19,10 @@ const links = [
   },
 ];
 
+/**
+ * Navbar component handles site navigation with a mobile-responsive menu.
+ * Toggles between open and closed states on mobile.
+ */
 const Navbar = () => {
   const [openMenu,setopenmenu] = useState(false)
 

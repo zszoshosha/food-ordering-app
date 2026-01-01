@@ -3,7 +3,14 @@ import Menu from "@/components/menu";
 
 import React from "react";
 
+/**
+ * Bestsellers component displays a section of best-selling menu items.
+ * Includes a heading and a grid of menu items.
+ */
 const Bestsellers = () => {
+  /**
+   * Sample best-selling menu items.
+   */
   const bestSellers = [
     {
       id: crypto.randomUUID(),
