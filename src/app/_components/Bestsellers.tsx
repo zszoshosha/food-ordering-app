@@ -1,53 +1,23 @@
 import MainHeading from "@/components/main-heading";
 import Menu from "@/components/menu";
+import { db } from "@/lib/prisma";
+import { GetproductsByDb } from "@/server/db/product";
 
 import React from "react";
-
 /**
  * Bestsellers component displays a section of best-selling menu items.
- * Includes a heading and a grid of menu items.
+ * Fetches products from the database and renders them in a menu grid.
  */
-const Bestsellers = () => {
-  /**
-   * Sample best-selling menu items.
-   */
-  const bestSellers = [
-    {
-      id: crypto.randomUUID(),
-      name: "pizza",
-      description: "this is a pizza",
-      basePrice: 12,
-      image: "/assets/images/pizza.png",
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "pizza",
-      description: "this is a pizza",
-      basePrice: 12,
-      image: "/assets/images/pizza.png",
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "pizza",
-      description: "this is a pizza",
-      basePrice: 12,
-      image: "/assets/images/pizza.png",
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "pizza",
-      description: "this is a pizza",
-      basePrice: 12,
-      image: "/assets/images/pizza.png",
-    },
-  ];
+const Bestsellers = async () => {
+  const bestSellers = await GetproductsByDb();
+  
   return (
     <section>
       <div className="container">
         <div className="text-center mb-4">
           <MainHeading title={"our best sellers"} subTitle={"checkout"} />
         </div>
-<Menu items={bestSellers}/>
+        <Menu items={bestSellers} />
       </div>
     </section>
   );
