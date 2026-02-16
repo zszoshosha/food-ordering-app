@@ -1,18 +1,19 @@
-import { db } from "@/lib/prisma";
 import Bestsellers from "./_components/Bestsellers";
 import Hero from "./_components/Hero";
+import About from "./_components/About";
+import Contact from "./_components/Contact";
 
 /**
  * Home page component.
- * Renders the main landing page with Hero and Bestsellers sections.
+ * Renders the main landing page with Hero, Bestsellers, About, and Contact sections.
  */
-export default async function Home() {
-  const product = await db.product.findMany();
-  console.log(product);
+export default function Home() {
   return (
-    <main>
-      <Hero />
-      <Bestsellers />
-    </main>
+      <main>
+        <Hero />
+        <Bestsellers />
+        <About />
+        <Contact />
+      </main>
   );
 }

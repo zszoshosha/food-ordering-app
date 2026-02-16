@@ -10,7 +10,7 @@ import React from "react";
  */
 const Bestsellers = async () => {
   const bestSellers = await GetproductsByDb();
-  
+
   return (
     <section>
       <div className="container">

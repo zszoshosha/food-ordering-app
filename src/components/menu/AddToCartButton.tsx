@@ -21,10 +21,11 @@ import { Size, Extra, ProductSize } from "@prisma/client";
 import { useState, useMemo } from "react";
 import {
   addCartItem,
-  cartItem,
+  removeCartItem,
   selectCartItems,
 } from "@/redux/features/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { getCartTotal } from "@/lib/cart";
 
 /**
  * AddToCartButton component opens a dialog for customizing and adding an item to the cart.
@@ -40,7 +41,7 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
     cart.find((cartItem) => cartItem.id === item.id)?.size ||
     item.sizes.find((size) => size.name.toUpperCase() === ProductSize.SMALL);
   const [selectedSize, setSelectedSize] = useState<Size>(defaultSize!);
-
+  const itemTotal = getCartTotal(item.id, cart);
   const totalPrice = useMemo(() => {
     const extrasTotal = selectedExtra.reduce(
       (sum, extra) => sum + extra.price,
@@ -54,10 +55,11 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
       addCartItem({
         size: selectedSize,
         extras: selectedExtra,
-        basePrice: totalPrice,
+        basePrice: item.basePrice,
         name: item.name,
         id: item.id,
         image: item.image,
+        cartItem: undefined,
       }),
     );
     return;
@@ -105,9 +107,19 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={AddToCartButton}>
-              Add to Cart {formatCurrency(totalPrice)}
-            </Button>
+            {itemTotal === 0 ? (
+              <Button type="submit" onClick={AddToCartButton}>
+                Add to Cart {formatCurrency(totalPrice)}
+              </Button>
+            ) : (
+              <ChooseQuantity
+                item={item}
+                selectedSize={selectedSize}
+                selectedExtra={selectedExtra}
+                totalPrice={totalPrice}
+                itemTotal={itemTotal}
+              />
+            )}
           </DialogFooter>
         </DialogContent>
       </>
@@ -202,3 +214,72 @@ function Extras({
     </div>
   ));
 }
+
+const ChooseQuantity = ({
+  item,
+  selectedSize,
+  selectedExtra,
+  totalPrice,
+  itemTotal,
+}: {
+  item: ProductWithRelations;
+  selectedSize: Size;
+  selectedExtra: Extra[];
+  totalPrice: number;
+  itemTotal: number;
+}) => {
+  const dispatch = useAppDispatch();
+
+  const handleIncrease = () => {
+    dispatch(
+      addCartItem({
+        size: selectedSize,
+        extras: selectedExtra,
+        basePrice: item.basePrice,
+        name: item.name,
+        id: item.id,
+        image: item.image,
+        cartItem: undefined,
+      }),
+    );
+  };
+
+  const handleDecrease = () => {
+    dispatch(removeCartItem({ id: item.id }));
+  };
+
+  return (
+    <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="flex items-center gap-3 bg-muted/40 border border-border rounded-full px-3 py-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="rounded-full w-9 h-9 p-0"
+          onClick={handleDecrease}
+          disabled={itemTotal <= 1}
+        >
+          -
+        </Button>
+        <span className="min-w-6 text-center font-semibold">{itemTotal}</span>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="rounded-full w-9 h-9 p-0"
+          onClick={handleIncrease}
+        >
+          +
+        </Button>
+      </div>
+
+      <Button
+        type="button"
+        onClick={handleIncrease}
+        className="w-full sm:w-auto"
+      >
+        Add More {formatCurrency(totalPrice)}
+      </Button>
+    </div>
+  );
+};

@@ -1,3 +1,9 @@
+/**
+ * CartItems Component
+ * Displays all items in the shopping cart with details (size, extras, quantity)
+ * Allows users to modify quantities, remove items, and manage their cart
+ * Also handles persistence of cart to localStorage
+ */
 "use client";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import {
@@ -8,38 +14,43 @@ import {
 } from "@/redux/features/cartSlice";
 import Image from "next/image";
 import { Trash2, Minus, Plus } from "lucide-react";
+import { getCartItemTotal } from "@/lib/cart";
+import { formatCurrency } from "@/lib/formatters";
+import { useEffect } from "react";
 
 const CartItems = () => {
   const items = useAppSelector(selectCartItems);
   const dispatch = useAppDispatch();
-  console.log("Cart Items:", items);
 
+  // Persist cart items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(items));
+  }, [items]);
+
+  /**
+   * Increase quantity of an item by 1
+   * Dispatches addCartItem action which handles duplicate detection
+   */
   const handleIncreaseQuantity = (item: any) => {
     dispatch(addCartItem(item));
   };
 
+  /**
+   * Decrease quantity of an item by 1
+   * Removes item completely if quantity reaches 0
+   */
   const handleDecreaseQuantity = (id: string) => {
     dispatch(removeCartItem({ id }));
   };
 
+  /**
+   * Remove an item completely from the cart
+   */
   const handleRemoveItem = (id: string) => {
     dispatch(removeItemFromCart({ id }));
   };
 
-  const calculateItemTotal = (item: any) => {
-    let total = item.basePrice;
-    if (item.size) {
-      total += item.size.price;
-    }
-    if (item.extras && item.extras.length > 0) {
-      total += item.extras.reduce(
-        (sum: number, extra: any) => sum + extra.price,
-        0,
-      );
-    }
-    return total * (item.quantity || 1);
-  };
-
+  // Show empty state if no items in cart
   if (items.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -48,6 +59,7 @@ const CartItems = () => {
     );
   }
 
+  // Render cart items with details and controls
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold mb-6">
@@ -76,8 +88,8 @@ const CartItems = () => {
               {/* Size */}
               {item.size && (
                 <p className="text-sm text-gray-600">
-                  Size: <span className="font-medium">{item.size.name}</span>{" "}
-                  (+${item.size.price.toFixed(2)})
+                  Size: <span className="font-medium">{item.size.name}</span> (
+                  {formatCurrency(item.size.price)})
                 </p>
               )}
 
@@ -88,7 +100,7 @@ const CartItems = () => {
                   <ul className="ml-4 list-disc">
                     {item.extras.map((extra, idx) => (
                       <li key={idx}>
-                        {extra.name} (+${extra.price.toFixed(2)})
+                        {extra.name} ({formatCurrency(extra.price)})
                       </li>
                     ))}
                   </ul>
@@ -129,7 +141,7 @@ const CartItems = () => {
               <div className="text-right">
                 <p className="text-sm text-gray-500">Total</p>
                 <p className="text-xl font-bold text-primary">
-                  ${calculateItemTotal(item).toFixed(2)}
+                  {formatCurrency(getCartItemTotal(item))}
                 </p>
               </div>
             </div>
