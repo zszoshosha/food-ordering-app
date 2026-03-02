@@ -59,7 +59,6 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
         name: item.name,
         id: item.id,
         image: item.image,
-        cartItem: undefined,
       }),
     );
     return;
@@ -239,7 +238,6 @@ const ChooseQuantity = ({
         name: item.name,
         id: item.id,
         image: item.image,
-        cartItem: undefined,
       }),
     );
   };

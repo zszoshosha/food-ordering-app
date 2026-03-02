@@ -23,7 +23,6 @@ export type cartItem = {
 type cartState = {
   items: cartItem[];
 };
-
 /**
  * Initial state - starts with empty cart
  * Note: localStorage is synced from CartItems component on client-side only
@@ -90,6 +89,15 @@ export const cartSlice = createSlice({
     removeItemFromCart: (state, action: PayloadAction<{ id: string }>) => {
       state.items = state.items.filter((item) => item.id !== action.payload.id);
     },
+    /**
+     * Hydrate cart from localStorage on client-side.
+     * This action replaces the entire cart state with persisted items.
+     * Called once on mount in CartItems component to restore the cart
+     * after SSR hydration (avoids mismatch between server and client state).
+     */
+    hydrateCart: (state, action: PayloadAction<cartItem[]>) => {
+      state.items = action.payload;
+    },
     clearCart: (state) => {
       state.items = [];
     },
@@ -102,8 +110,13 @@ export const cartSlice = createSlice({
   },
 });
 
-export const { addCartItem, removeCartItem, removeItemFromCart, clearCart } =
-  cartSlice.actions;
+export const {
+  addCartItem,
+  removeCartItem,
+  removeItemFromCart,
+  hydrateCart,
+  clearCart,
+} = cartSlice.actions;
 export default cartSlice.reducer;
 
 export const selectCartItems = (state: RootState) => state.cart.items;

@@ -1,0 +1,68 @@
+{
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter your name"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email",
+        "validation": {
+          "required": "Email is required",
+          "invalid": "Enter a valid email"
+        }
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password",
+        "validation": {
+          "required": "Password is required"
+        }
+      },
+      "submit": "Sign in",
+      "authPrompt": {
+        "message": "Don't have an account?",
+        "signUpLinkText": "Create one"
+      }
+    },
+    "register": {
+      "title": "Create account",
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter your name",
+        "validation": {
+          "required": "Name is required"
+        }
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email",
+        "validation": {
+          "required": "Email is required",
+          "invalid": "Enter a valid email"
+        }
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password",
+        "validation": {
+          "required": "Password is required"
+        }
+      },
+      "confirmPassword": {
+        "label": "Confirm Password",
+        "placeholder": "Confirm your password",
+        "validation": {
+          "required": "Confirm password is required"
+        }
+      },
+      "submit": "Create account",
+      "authPrompt": {
+        "message": "Already have an account?",
+        "loginLinkText": "Sign in"
+      }
+    }
+  }
+}

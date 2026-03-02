@@ -1,5 +1,4 @@
 "use client";
-import { GetproductsByDb } from "@/server/db/product";
 import React, { useState, useEffect } from "react";
 import MainHeading from "@/components/main-heading";
 import Menu from "@/components/menu";
@@ -29,10 +28,17 @@ export default function MenuPage() {
   ];
 
   useEffect(() => {
-    // Fetch products on mount
+    /**
+     * Fetch products from the API route on component mount.
+     * Changed from direct DB call (GetproductsByDb) to fetch("/api/products")
+     * because Prisma/server code cannot be imported in client components.
+     * The API route handles the DB query server-side and returns JSON.
+     */
     const fetchProducts = async () => {
       try {
-        const data = await GetproductsByDb();
+        const response = await fetch("/api/products");
+        if (!response.ok) throw new Error("Failed to fetch products");
+        const data: ProductWithRelations[] = await response.json();
         setProducts(data);
         setFilteredProducts(data);
       } catch (error) {
@@ -53,7 +59,7 @@ export default function MenuPage() {
       setFilteredProducts(products);
     } else {
       const filtered = products.filter(
-        (product) => product.category === category
+        (product) => product.category === category,
       );
       setFilteredProducts(filtered);
     }

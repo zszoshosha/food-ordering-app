@@ -1,0 +1,114 @@
+{
+  "common": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "menu": "Menú",
+    "contact": "Contacto",
+    "cart": "Carrito",
+    "language": "Idioma"
+  },
+  "hero": {
+    "title": "Bienvenido a Pizza Palace",
+    "subtitle": "Auténtica Pizza Italiana Entregada a Tu Puerta",
+    "description": "Experimenta el sabor de Italia con nuestras pizzas artesanales hechas con los mejores ingredientes. ¡Entrega rápida, caliente y fresca!",
+    "orderNow": "Ordenar Ahora",
+    "viewMenu": "Ver Menú"
+  },
+  "about": {
+    "title": "Acerca de Nosotros",
+    "headline": "Creando Pizzas Perfectas Desde 1990",
+    "description1": "En Pizza Palace, creemos en el arte de hacer pizzas tradicionales. Nuestras recetas se han transmitido de generación en generación, asegurando que cada bocado sea un viaje a Italia.",
+    "description2": "Usamos sólo los ingredientes más frescos, desde nuestra masa casera hasta nuestros quesos italianos importados y toppings seleccionados a mano.",
+    "ourMission": "Nuestra Misión",
+    "missionText": "Llevar auténtica pizza italiana a tu mesa con amor, cuidado y la entrega más rápida de la ciudad.",
+    "ourValues": "Nuestros Valores",
+    "quality": "Ingredientes de Calidad",
+    "qualityDesc": "Solo los ingredientes más finos y frescos",
+    "authentic": "Recetas Auténticas",
+    "authenticDesc": "Métodos tradicionales italianos",
+    "service": "Servicio Rápido",
+    "serviceDesc": "Entrega caliente y fresca garantizada"
+  },
+  "menu": {
+    "title": "Nuestro Menú",
+    "subtitle": "Descubre Nuestra Deliciosa Selección",
+    "addToCart": "Añadir al Carrito",
+    "categories": {
+      "all": "Todo",
+      "pizza": "Pizza",
+      "pasta": "Pasta",
+      "salads": "Ensaladas",
+      "desserts": "Postres",
+      "drinks": "Bebidas"
+    },
+    "loading": "Cargando menú...",
+    "error": "Error al cargar el menú"
+  },
+  "cart": {
+    "title": "Tu Carrito",
+    "empty": "Tu carrito está vacío",
+    "item": "Artículo",
+    "price": "Precio",
+    "quantity": "Cantidad",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Impuesto",
+    "delivery": "Tarifa de Entrega",
+    "grandTotal": "Total General",
+    "continueShopping": "Continuar Comprando",
+    "checkout": "Proceder al Pago",
+    "remove": "Eliminar"
+  },
+  "checkout": {
+    "title": "Pago",
+    "personalInfo": "Información Personal",
+    "deliveryInfo": "Información de Entrega",
+    "paymentInfo": "Información de Pago",
+    "name": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "phone": "Número de Teléfono",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "zipCode": "Código Postal",
+    "cardNumber": "Número de Tarjeta",
+    "expiryDate": "Fecha de Vencimiento",
+    "cvv": "CVV",
+    "placeOrder": "Realizar Pedido",
+    "processing": "Procesando...",
+    "orderSuccess": "¡Pedido realizado con éxito!",
+    "orderError": "Error al realizar el pedido. Por favor, inténtelo de nuevo."
+  },
+  "contact": {
+    "title": "Contáctanos",
+    "subtitle": "Nos Encantaría Saber de Ti",
+    "name": "Tu Nombre",
+    "email": "Tu Correo Electrónico",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "send": "Enviar Mensaje",
+    "sending": "Enviando...",
+    "success": "¡Mensaje enviado con éxito!",
+    "error": "Error al enviar el mensaje. Por favor, inténtelo de nuevo.",
+    "getInTouch": "Ponte en Contacto",
+    "address": "123 Calle de la Pizza, Ciudad de Comida, FC 12345",
+    "phone": "+1 (555) 123-4567",
+    "emailAddress": "info@pizzapalace.com",
+    "hours": "Horario de Atención",
+    "weekdays": "Lun - Vie: 11:00 AM - 11:00 PM",
+    "weekends": "Sáb - Dom: 10:00 AM - 12:00 AM"
+  },
+  "bestsellers": {
+    "title": "Nuestros Más Vendidos",
+    "subtitle": "Los Más Amados por Nuestros Clientes"
+  },
+  "footer": {
+    "description": "Auténtica pizza italiana entregada a tu puerta. Hecha con amor y los mejores ingredientes.",
+    "quickLinks": "Enlaces Rápidos",
+    "followUs": "Síguenos",
+    "newsletter": "Boletín",
+    "newsletterText": "Suscríbete para recibir ofertas especiales y actualizaciones",
+    "emailPlaceholder": "Ingresa tu correo electrónico",
+    "subscribe": "Suscribirse",
+    "rights": "Todos los derechos reservados."
+  }
+}

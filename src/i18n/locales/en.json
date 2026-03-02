@@ -1,0 +1,114 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "menu": "Menu",
+    "contact": "Contact",
+    "cart": "Cart",
+    "language": "Language"
+  },
+  "hero": {
+    "title": "Welcome to Pizza Palace",
+    "subtitle": "Authentic Italian Pizza Delivered to Your Door",
+    "description": "Experience the taste of Italy with our handcrafted pizzas made from the finest ingredients. Fast delivery, hot and fresh!",
+    "orderNow": "Order Now",
+    "viewMenu": "View Menu"
+  },
+  "about": {
+    "title": "About Us",
+    "headline": "Crafting Perfect Pizzas Since 1990",
+    "description1": "At Pizza Palace, we believe in the art of traditional pizza making. Our recipes have been passed down through generations, ensuring every bite is a journey to Italy.",
+    "description2": "We use only the freshest ingredients, from our homemade dough to our imported Italian cheeses and hand-picked toppings.",
+    "ourMission": "Our Mission",
+    "missionText": "To bring authentic Italian pizza to your table with love, care, and the fastest delivery in town.",
+    "ourValues": "Our Values",
+    "quality": "Quality Ingredients",
+    "qualityDesc": "Only the finest and freshest ingredients",
+    "authentic": "Authentic Recipes",
+    "authenticDesc": "Traditional Italian methods",
+    "service": "Fast Service",
+    "serviceDesc": "Hot and fresh delivery guaranteed"
+  },
+  "menu": {
+    "title": "Our Menu",
+    "subtitle": "Discover Our Delicious Selection",
+    "addToCart": "Add to Cart",
+    "categories": {
+      "all": "All",
+      "pizza": "Pizza",
+      "pasta": "Pasta",
+      "salads": "Salads",
+      "desserts": "Desserts",
+      "drinks": "Drinks"
+    },
+    "loading": "Loading menu...",
+    "error": "Failed to load menu"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "item": "Item",
+    "price": "Price",
+    "quantity": "Quantity",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "delivery": "Delivery Fee",
+    "grandTotal": "Grand Total",
+    "continueShopping": "Continue Shopping",
+    "checkout": "Proceed to Checkout",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "personalInfo": "Personal Information",
+    "deliveryInfo": "Delivery Information",
+    "paymentInfo": "Payment Information",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "address": "Address",
+    "city": "City",
+    "zipCode": "ZIP Code",
+    "cardNumber": "Card Number",
+    "expiryDate": "Expiry Date",
+    "cvv": "CVV",
+    "placeOrder": "Place Order",
+    "processing": "Processing...",
+    "orderSuccess": "Order placed successfully!",
+    "orderError": "Failed to place order. Please try again."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We'd Love to Hear From You",
+    "name": "Your Name",
+    "email": "Your Email",
+    "subject": "Subject",
+    "message": "Message",
+    "send": "Send Message",
+    "sending": "Sending...",
+    "success": "Message sent successfully!",
+    "error": "Failed to send message. Please try again.",
+    "getInTouch": "Get In Touch",
+    "address": "123 Pizza Street, Food City, FC 12345",
+    "phone": "+1 (555) 123-4567",
+    "emailAddress": "info@pizzapalace.com",
+    "hours": "Opening Hours",
+    "weekdays": "Mon - Fri: 11:00 AM - 11:00 PM",
+    "weekends": "Sat - Sun: 10:00 AM - 12:00 AM"
+  },
+  "bestsellers": {
+    "title": "Our Bestsellers",
+    "subtitle": "Most Loved by Our Customers"
+  },
+  "footer": {
+    "description": "Authentic Italian pizza delivered to your door. Made with love and the finest ingredients.",
+    "quickLinks": "Quick Links",
+    "followUs": "Follow Us",
+    "newsletter": "Newsletter",
+    "newsletterText": "Subscribe to get special offers and updates",
+    "emailPlaceholder": "Enter your email",
+    "subscribe": "Subscribe",
+    "rights": "All rights reserved."
+  }
+}

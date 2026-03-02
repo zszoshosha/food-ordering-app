@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
 import { ReduxProvider } from "@/redux/provider";
 
 /**
@@ -25,23 +23,24 @@ export const metadata: Metadata = {
 
 /**
  * RootLayout component wraps the entire application.
- * Includes the header and applies global styles and fonts.
+ *
+ * Note: Header and Footer have been moved to the [locale] layout
+ * so they can access the current locale for translations and RTL support.
+ * This root layout only provides the HTML shell, fonts, and Redux store.
+ *
  * @param {Object} props - Component props.
  * @param {React.ReactNode} props.children - Child components to render.
  */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr">
       <body className={roboto.className}>
-        <ReduxProvider>
-          <Header />
-          {children}
-          <Footer />
-        </ReduxProvider>
+        {/* ReduxProvider wraps everything to enable global state (cart, etc.) */}
+        <ReduxProvider>{children}</ReduxProvider>
       </body>
     </html>
   );

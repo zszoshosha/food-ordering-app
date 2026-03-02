@@ -11,21 +11,47 @@ import {
   removeCartItem,
   removeItemFromCart,
   addCartItem,
+  hydrateCart,
 } from "@/redux/features/cartSlice";
 import Image from "next/image";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { getCartItemTotal } from "@/lib/cart";
 import { formatCurrency } from "@/lib/formatters";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const CartItems = () => {
   const items = useAppSelector(selectCartItems);
   const dispatch = useAppDispatch();
+  // Track whether localStorage data has been loaded into Redux
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Persist cart items to localStorage whenever they change
+  /**
+   * On mount: Load persisted cart items from localStorage into Redux store.
+   * This solves the SSR hydration mismatch — Redux starts with an empty cart
+   * on the server, and we restore the real cart data on the client after mount.
+   */
   useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(items));
-  }, [items]);
+    try {
+      const storedItems = window.localStorage.getItem("cartItems");
+      const parsedItems = storedItems ? JSON.parse(storedItems) : [];
+      dispatch(hydrateCart(parsedItems));
+    } catch {
+      // If localStorage is corrupted or unavailable, start with empty cart
+      dispatch(hydrateCart([]));
+    } finally {
+      setIsHydrated(true);
+    }
+  }, [dispatch]);
+
+  /**
+   * Persist cart items to localStorage whenever they change.
+   * Only runs after hydration is complete to prevent overwriting
+   * persisted data with the initial empty Redux state.
+   */
+  useEffect(() => {
+    if (!isHydrated) return;
+    window.localStorage.setItem("cartItems", JSON.stringify(items));
+  }, [items, isHydrated]);
 
   /**
    * Increase quantity of an item by 1

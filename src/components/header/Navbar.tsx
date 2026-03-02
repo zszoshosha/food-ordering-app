@@ -6,17 +6,26 @@ import { Button, buttonVariants } from "../ui/button";
 import { Menu, XIcon, ShoppingCart } from "lucide-react";
 import { selectCartItems } from "@/redux/features/cartSlice";
 import { getCartQuantity } from "@/lib/cart";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { useAppSelector } from "@/redux/hooks";
+import { useTranslations } from "next-intl";
 
 /**
- * Navigation links for the site.
+ * Generates navigation links with translated titles.
+ * Uses the next-intl translation function (t) to get localized link labels.
+ * Each link has a unique ID, translated title, route href, and optional flags.
+ * @param t - The translation function from useTranslations()
  */
-const links = [
-  { id: crypto.randomUUID(), title: "Menu", href: Routes.MENU },
-  { id: crypto.randomUUID(), title: "About", href: Routes.ABOUT },
-  { id: crypto.randomUUID(), title: "contact", href: Routes.CONTACT },
-  { id: crypto.randomUUID(), title: "Cart", href: Routes.CART, isCart: true },
+const getLinks = (t: any) => [
+  { id: crypto.randomUUID(), title: t("common.menu"), href: Routes.MENU },
+  { id: crypto.randomUUID(), title: t("common.about"), href: Routes.ABOUT },
+  { id: crypto.randomUUID(), title: t("common.contact"), href: Routes.CONTACT },
+  {
+    id: crypto.randomUUID(),
+    title: t("common.cart"),
+    href: Routes.CART,
+    isCart: true,
+  },
   {
     id: crypto.randomUUID(),
     title: "Login",
@@ -29,23 +38,27 @@ const links = [
  * Toggles between open and closed states on mobile.
  */
 const Navbar = () => {
+  // Get translation function for localized nav labels
+  const t = useTranslations();
   const [openMenu, setopenmenu] = useState(false);
   const Cart = useAppSelector(selectCartItems);
   const cartQuantity = getCartQuantity(Cart);
   const pathname = usePathname();
+  const params = useParams();
+  // Extract locale from URL params for locale-aware link matching and RTL support
+  const locale = params.locale as string;
+  const isArabic = locale === "ar";
 
+  // Generate navigation links with translated titles
+  const links = getLinks(t);
+
+  /**
+   * Checks if a navigation link is currently active.
+   * Constructs the full localized href (e.g., /en/menu) and compares with pathname.
+   */
   const isActiveLink = (href: string) => {
-    if (href === Routes.CART && pathname === `/${Routes.CART}`) return true;
-    if (href === Routes.MENU && pathname === `/${Routes.MENU}`) return true;
-    if (href === Routes.ABOUT && pathname === `/${Routes.ABOUT}`) return true;
-    if (href === Routes.CONTACT && pathname === `/${Routes.CONTACT}`)
-      return true;
-    if (
-      href === `${Routes.AUTH}/${Pages.LOGIN}` &&
-      pathname === `/${Routes.AUTH}/${Pages.LOGIN}`
-    )
-      return true;
-    return false;
+    const localizedHref = `/${locale}${href.startsWith("/") ? href : "/" + href}`;
+    return pathname === localizedHref;
   };
 
   return (
@@ -73,14 +86,20 @@ const Navbar = () => {
       {/* Navigation Menu */}
       <ul
         className={`fixed lg:static ${
-          openMenu ? "left-0 z-50" : "left-full"
-        } top-0 px-10 py-20 lg:p-0 bg-background lg:bg-transparent transition-all duration-300 ease-in-out h-full lg:h-auto flex-col lg:flex-row w-[280px] sm:w-[320px] lg:w-auto flex items-start lg:items-center gap-8 lg:gap-6 shadow-2xl lg:shadow-none border-r lg:border-0`}
+          openMenu
+            ? isArabic
+              ? "right-0 z-50"
+              : "left-0 z-50"
+            : isArabic
+              ? "right-full"
+              : "left-full"
+        } top-0 px-10 py-20 lg:p-0 bg-background lg:bg-transparent transition-all duration-300 ease-in-out h-full lg:h-auto flex-col lg:flex-row w-[280px] sm:w-[320px] lg:w-auto flex items-start lg:items-center gap-8 lg:gap-6 shadow-2xl lg:shadow-none ${isArabic ? "border-l" : "border-r"} lg:border-0`}
       >
         {/* Mobile Close Button */}
         <Button
           variant="secondary"
           size="sm"
-          className="absolute top-6 right-6 lg:hidden hover:scale-105 transition-transform"
+          className={`absolute top-6 ${isArabic ? "left-6" : "right-6"} lg:hidden hover:scale-105 transition-transform`}
           onClick={() => setopenmenu(false)}
           aria-label="Close menu"
         >
@@ -111,11 +130,13 @@ const Navbar = () => {
                   <>
                     <ShoppingCart className="!w-5 !h-5" />
                     {cartQuantity > 0 && (
-                      <span className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                      <span
+                        className={`absolute -top-3 ${isArabic ? "-left-3" : "-right-3"} bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold`}
+                      >
                         {cartQuantity}
                       </span>
                     )}
-                    <span className="hidden sm:inline">Cart</span>
+                    <span className="hidden sm:inline">{link.title}</span>
                   </>
                 ) : (
                   <>
