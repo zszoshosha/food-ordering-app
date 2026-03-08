@@ -20,7 +20,7 @@ const Header = () => {
           🍕 pizza
         </Link>
         <div className="flex items-center gap-4">
-          {/* Language switcher dropdown for changing locale (en/ar/es) */}
+          {/* Language switcher dropdown for changing locale (en/ar) */}
           <LanguageSwitcher />
           <Navbar />
         </div>

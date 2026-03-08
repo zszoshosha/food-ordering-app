@@ -1,0 +1,222 @@
+{
+  "logo": "🍕 قصر البيتزا",
+  "home": {
+    "hero": {
+      "title": "مرحباً بكم في قصر البيتزا",
+      "description": "جرب طعم إيطاليا مع البيتزا المصنوعة يدوياً من أجود المكونات. توصيل سريع، ساخنة وطازجة!",
+      "orderNow": "اطلب الآن",
+      "learnMore": "اعرف المزيد"
+    },
+    "bestSeller": {
+      "checkOut": "اطلع",
+      "OurBestSellers": "الأكثر مبيعاً"
+    },
+    "about": {
+      "ourStory": "قصتنا",
+      "aboutUs": "من نحن",
+      "descriptions": {
+        "one": "في قصر البيتزا، نؤمن بفن صناعة البيتزا التقليدية. وصفاتنا توارثتها الأجيال.",
+        "two": "نستخدم فقط أجود المكونات الطازجة، من عجينتنا المصنوعة منزلياً إلى الأجبان الإيطالية المستوردة والإضافات المختارة يدوياً.",
+        "three": "مهمتنا تقديم البيتزا الإيطالية الأصيلة إلى طاولتك بحب وعناية وأسرع خدمة توصيل في المدينة."
+      }
+    },
+    "contact": {
+      "Don'tHesitate": "لا تتردد",
+      "contactUs": "اتصل بنا"
+    }
+  },
+  "navbar": {
+    "home": "الرئيسية",
+    "about": "من نحن",
+    "menu": "القائمة",
+    "contact": "اتصل بنا",
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "signOut": "تسجيل الخروج",
+    "profile": "الملف الشخصي",
+    "admin": "الإدارة"
+  },
+  "auth": {
+    "login": {
+      "title": "مرحباً بعودتك",
+      "name": {
+        "label": "الاسم",
+        "placeholder": "أدخل اسمك"
+      },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "أدخل بريدك الإلكتروني"
+      },
+      "password": {
+        "label": "كلمة المرور",
+        "placeholder": "أدخل كلمة المرور"
+      },
+      "submit": "تسجيل الدخول",
+      "authPrompt": {
+        "message": "ليس لديك حساب؟",
+        "signUpLinkText": "أنشئ حساباً"
+      }
+    },
+    "register": {
+      "title": "إنشاء حساب",
+      "name": {
+        "label": "الاسم",
+        "placeholder": "أدخل اسمك"
+      },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "أدخل بريدك الإلكتروني"
+      },
+      "password": {
+        "label": "كلمة المرور",
+        "placeholder": "أدخل كلمة المرور"
+      },
+      "confirmPassword": {
+        "label": "تأكيد كلمة المرور",
+        "placeholder": "أعد إدخال كلمة المرور"
+      },
+      "submit": "إنشاء حساب",
+      "authPrompt": {
+        "message": "لديك حساب بالفعل؟",
+        "loginLinkText": "تسجيل الدخول"
+      }
+    }
+  },
+  "validation": {
+    "nameRequired": "الاسم مطلوب",
+    "validEmail": "يرجى إدخال بريد إلكتروني صالح",
+    "passwordMinLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+    "passwordMaxLength": "كلمة المرور يجب ألا تتجاوز 20 حرفاً",
+    "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين"
+  },
+  "menuItem": {
+    "addToCart": "أضف إلى السلة"
+  },
+  "messages": {
+    "userNotFound": "المستخدم غير موجود",
+    "incorrectPassword": "كلمة المرور غير صحيحة",
+    "loginSuccessful": "تم تسجيل الدخول بنجاح",
+    "unexpectedError": "حدث خطأ غير متوقع",
+    "userAlreadyExists": "المستخدم موجود بالفعل",
+    "accountCreated": "تم إنشاء الحساب بنجاح",
+    "updateProfileSucess": "تم تحديث الملف الشخصي بنجاح",
+    "categoryAdded": "تمت إضافة الفئة بنجاح",
+    "updatecategorySucess": "تم تحديث الفئة بنجاح",
+    "deleteCategorySucess": "تم حذف الفئة بنجاح",
+    "productAdded": "تمت إضافة المنتج بنجاح",
+    "updateProductSucess": "تم تحديث المنتج بنجاح",
+    "deleteProductSucess": "تم حذف المنتج بنجاح",
+    "updateUserSucess": "تم تحديث المستخدم بنجاح",
+    "deleteUserSucess": "تم حذف المستخدم بنجاح"
+  },
+  "cart": {
+    "title": "سلتك",
+    "noItemsInCart": "لا توجد منتجات في سلتك"
+  },
+  "profile": {
+    "title": "ملفك الشخصي",
+    "form": {
+      "name": {
+        "label": "الاسم",
+        "placeholder": "أدخل اسمك"
+      },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "أدخل بريدك الإلكتروني"
+      },
+      "phone": {
+        "label": "الهاتف",
+        "placeholder": "أدخل رقم هاتفك"
+      },
+      "address": {
+        "label": "العنوان",
+        "placeholder": "أدخل عنوانك"
+      },
+      "postalCode": {
+        "label": "الرمز البريدي",
+        "placeholder": "أدخل الرمز البريدي"
+      },
+      "city": {
+        "label": "المدينة",
+        "placeholder": "أدخل مدينتك"
+      },
+      "country": {
+        "label": "الدولة",
+        "placeholder": "أدخل دولتك"
+      }
+    }
+  },
+  "admin": {
+    "tabs": {
+      "profile": "الملف الشخصي",
+      "categories": "الفئات",
+      "menuItems": "عناصر القائمة",
+      "users": "المستخدمون",
+      "orders": "الطلبات"
+    },
+    "categories": {
+      "form": {
+        "editName": "تعديل اسم الفئة",
+        "name": {
+          "label": "اسم الفئة",
+          "placeholder": "أدخل اسم الفئة",
+          "validation": {
+            "required": "اسم الفئة مطلوب"
+          }
+        }
+      }
+    },
+    "menu-items": {
+      "addItemSize": "إضافة حجم",
+      "createNewMenuItem": "إنشاء عنصر قائمة جديد",
+      "addExtraItem": "إضافة عنصر إضافي",
+      "menuOption": {
+        "name": "الاسم",
+        "extraPrice": "السعر الإضافي"
+      },
+      "form": {
+        "name": {
+          "label": "الاسم",
+          "placeholder": "أدخل اسم العنصر",
+          "validation": {
+            "required": "اسم العنصر مطلوب"
+          }
+        },
+        "description": {
+          "label": "الوصف",
+          "placeholder": "أدخل وصف العنصر",
+          "validation": {
+            "required": "الوصف مطلوب"
+          }
+        },
+        "basePrice": {
+          "label": "السعر الأساسي",
+          "placeholder": "أدخل السعر الأساسي",
+          "validation": {
+            "required": "السعر الأساسي مطلوب"
+          }
+        },
+        "category": {
+          "validation": {
+            "required": "الفئة مطلوبة"
+          }
+        },
+        "image": {
+          "validation": {
+            "required": "الصورة مطلوبة"
+          }
+        }
+      }
+    }
+  },
+  "sizes": "الأحجام",
+  "extrasIngredients": "الإضافات والمكونات",
+  "delete": "حذف",
+  "cancel": "إلغاء",
+  "create": "إنشاء",
+  "save": "حفظ",
+  "category": "الفئة",
+  "copyRight": "© 2024 قصر البيتزا. جميع الحقوق محفوظة.",
+  "noProductsFound": "لم يتم العثور على منتجات"
+}

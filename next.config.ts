@@ -18,5 +18,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Wrap the config with next-intl to inject i18n middleware and routing
+// Wrap the config with next-intl to inject i18n proxy routing
 export default withNextIntl(nextConfig);

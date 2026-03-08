@@ -1,7 +1,7 @@
 /**
  * Server-side utility to extract the current locale from the request URL.
  *
- * Reads the "x-url" header (set by middleware) and parses out the locale
+ * Reads the "x-url" header (set by proxy) and parses out the locale
  * segment from the URL path. This is used in server components that need
  * to know the current language (e.g., to load translations).
  *

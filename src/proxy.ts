@@ -1,12 +1,12 @@
 /**
- * Internationalization Middleware
+ * Internationalization Proxy
  *
- * This middleware intercepts all incoming requests and handles locale detection/routing.
+ * This proxy intercepts all incoming requests and handles locale detection/routing.
  * It automatically redirects users to their preferred locale (e.g., /en/menu, /ar/menu)
  * and ensures every route is prefixed with a valid locale segment.
  *
  * How it works:
- * 1. Checks the URL for a locale prefix (en, ar, es)
+ * 1. Checks the URL for a locale prefix (en, ar)
  * 2. If no locale is found, redirects to the default locale (English)
  * 3. The "always" prefix strategy means URLs always include the locale (e.g., /en/about)
  */
@@ -27,5 +27,5 @@ export default createMiddleware({
 export const config = {
   // Only match the root path and paths starting with a supported locale
   // This avoids intercepting API routes, static files, etc.
-  matcher: ["/", "/(ar|en|es)/:path*"],
+  matcher: ["/", "/(ar|en)/:path*"],
 };

@@ -1,68 +1,222 @@
 {
+  "logo": "🍕 Pizza Palace",
+  "home": {
+    "hero": {
+      "title": "Welcome to Pizza Palace",
+      "description": "Experience the taste of Italy with our handcrafted pizzas made from the finest ingredients. Fast delivery, hot and fresh!",
+      "orderNow": "Order Now",
+      "learnMore": "Learn More"
+    },
+    "bestSeller": {
+      "checkOut": "Check Out",
+      "OurBestSellers": "Our Bestsellers"
+    },
+    "about": {
+      "ourStory": "Our Story",
+      "aboutUs": "About Us",
+      "descriptions": {
+        "one": "At Pizza Palace, we believe in the art of traditional pizza making. Our recipes have been passed down through generations.",
+        "two": "We use only the freshest ingredients, from our homemade dough to our imported Italian cheeses and hand-picked toppings.",
+        "three": "Our mission is to bring authentic Italian pizza to your table with love, care, and the fastest delivery in town."
+      }
+    },
+    "contact": {
+      "Don'tHesitate": "Don't Hesitate",
+      "contactUs": "Contact Us"
+    }
+  },
+  "navbar": {
+    "home": "Home",
+    "about": "About",
+    "menu": "Menu",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "signOut": "Sign Out",
+    "profile": "Profile",
+    "admin": "Admin"
+  },
   "auth": {
     "login": {
-      "title": "Welcome back",
+      "title": "Welcome Back",
       "name": {
         "label": "Name",
         "placeholder": "Enter your name"
       },
       "email": {
         "label": "Email",
-        "placeholder": "Enter your email",
-        "validation": {
-          "required": "Email is required",
-          "invalid": "Enter a valid email"
-        }
+        "placeholder": "Enter your email"
       },
       "password": {
         "label": "Password",
-        "placeholder": "Enter your password",
-        "validation": {
-          "required": "Password is required"
-        }
+        "placeholder": "Enter your password"
       },
-      "submit": "Sign in",
+      "submit": "Sign In",
       "authPrompt": {
         "message": "Don't have an account?",
         "signUpLinkText": "Create one"
       }
     },
     "register": {
-      "title": "Create account",
+      "title": "Create Account",
       "name": {
         "label": "Name",
-        "placeholder": "Enter your name",
-        "validation": {
-          "required": "Name is required"
-        }
+        "placeholder": "Enter your name"
       },
       "email": {
         "label": "Email",
-        "placeholder": "Enter your email",
-        "validation": {
-          "required": "Email is required",
-          "invalid": "Enter a valid email"
-        }
+        "placeholder": "Enter your email"
       },
       "password": {
         "label": "Password",
-        "placeholder": "Enter your password",
-        "validation": {
-          "required": "Password is required"
-        }
+        "placeholder": "Enter your password"
       },
       "confirmPassword": {
         "label": "Confirm Password",
-        "placeholder": "Confirm your password",
-        "validation": {
-          "required": "Confirm password is required"
-        }
+        "placeholder": "Confirm your password"
       },
-      "submit": "Create account",
+      "submit": "Sign Up",
       "authPrompt": {
         "message": "Already have an account?",
-        "loginLinkText": "Sign in"
+        "loginLinkText": "Sign In"
       }
     }
-  }
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "validEmail": "Please enter a valid email",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "passwordMaxLength": "Password must be at most 20 characters",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "menuItem": {
+    "addToCart": "Add to Cart"
+  },
+  "messages": {
+    "userNotFound": "User not found",
+    "incorrectPassword": "Incorrect password",
+    "loginSuccessful": "Login successful",
+    "unexpectedError": "An unexpected error occurred",
+    "userAlreadyExists": "User already exists",
+    "accountCreated": "Account created successfully",
+    "updateProfileSucess": "Profile updated successfully",
+    "categoryAdded": "Category added successfully",
+    "updatecategorySucess": "Category updated successfully",
+    "deleteCategorySucess": "Category deleted successfully",
+    "productAdded": "Product added successfully",
+    "updateProductSucess": "Product updated successfully",
+    "deleteProductSucess": "Product deleted successfully",
+    "updateUserSucess": "User updated successfully",
+    "deleteUserSucess": "User deleted successfully"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "noItemsInCart": "No items in your cart"
+  },
+  "profile": {
+    "title": "Your Profile",
+    "form": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter your name"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email"
+      },
+      "phone": {
+        "label": "Phone",
+        "placeholder": "Enter your phone number"
+      },
+      "address": {
+        "label": "Address",
+        "placeholder": "Enter your address"
+      },
+      "postalCode": {
+        "label": "Postal Code",
+        "placeholder": "Enter your postal code"
+      },
+      "city": {
+        "label": "City",
+        "placeholder": "Enter your city"
+      },
+      "country": {
+        "label": "Country",
+        "placeholder": "Enter your country"
+      }
+    }
+  },
+  "admin": {
+    "tabs": {
+      "profile": "Profile",
+      "categories": "Categories",
+      "menuItems": "Menu Items",
+      "users": "Users",
+      "orders": "Orders"
+    },
+    "categories": {
+      "form": {
+        "editName": "Edit Category Name",
+        "name": {
+          "label": "Category Name",
+          "placeholder": "Enter category name",
+          "validation": {
+            "required": "Category name is required"
+          }
+        }
+      }
+    },
+    "menu-items": {
+      "addItemSize": "Add Item Size",
+      "createNewMenuItem": "Create New Menu Item",
+      "addExtraItem": "Add Extra Item",
+      "menuOption": {
+        "name": "Name",
+        "extraPrice": "Extra Price"
+      },
+      "form": {
+        "name": {
+          "label": "Name",
+          "placeholder": "Enter item name",
+          "validation": {
+            "required": "Item name is required"
+          }
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Enter item description",
+          "validation": {
+            "required": "Description is required"
+          }
+        },
+        "basePrice": {
+          "label": "Base Price",
+          "placeholder": "Enter base price",
+          "validation": {
+            "required": "Base price is required"
+          }
+        },
+        "category": {
+          "validation": {
+            "required": "Category is required"
+          }
+        },
+        "image": {
+          "validation": {
+            "required": "Image is required"
+          }
+        }
+      }
+    }
+  },
+  "sizes": "Sizes",
+  "extrasIngredients": "Extras & Ingredients",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "create": "Create",
+  "save": "Save",
+  "category": "Category",
+  "copyRight": "© 2024 Pizza Palace. All rights reserved.",
+  "noProductsFound": "No products found"
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
+import { Sonner } from "@/components/ui/sonner";
 
 /**
  * Roboto font configuration for the application.
@@ -40,7 +41,10 @@ export default async function RootLayout({
     <html lang="en" dir="ltr">
       <body className={roboto.className}>
         {/* ReduxProvider wraps everything to enable global state (cart, etc.) */}
-        <ReduxProvider>{children}</ReduxProvider>
+        <ReduxProvider>
+          {children}
+          <Sonner />
+        </ReduxProvider>
       </body>
     </html>
   );

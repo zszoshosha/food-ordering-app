@@ -19,50 +19,7 @@ export default async function SignInPage() {
         </div>
 
         <Form translations={translations} />
-        {/* <form className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href={`/${Routes.AUTH}/${Pages.FORGOT_PASSWORD}`}
-                className="text-xs text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox id="remember" name="remember" />
-            <Label htmlFor="remember" className="text-sm font-normal">
-              Remember me
-            </Label>
-          </div>
-
-          <Button type="submit" className="w-full" size="lg">
-            Sign in
-          </Button>
-        </form> */}
+        
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}

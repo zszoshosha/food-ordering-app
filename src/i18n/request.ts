@@ -5,13 +5,13 @@
  * It defines the supported locales, validates the requested locale,
  * and dynamically loads the corresponding translation JSON file.
  *
- * Supported locales: English (en), Arabic (ar), Spanish (es)
+ * Supported locales: English (en), Arabic (ar)
  */
 import { getRequestConfig } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 // Define all supported locales as a const tuple for type safety
-export const locales = ["en", "ar", "es"] as const;
+export const locales = ["en", "ar"] as const;
 export type Locale = (typeof locales)[number];
 
 // Default fallback locale when no match is found

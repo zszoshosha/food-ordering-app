@@ -7,7 +7,7 @@
  * It reads the current locale from the URL params and swaps it when a new
  * language is selected, preserving the rest of the current path.
  *
- * Supported languages: English, Arabic (العربية), Spanish (Español)
+ * Supported languages: English, Arabic (العربية)
  */
 import { useParams, usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -18,7 +18,6 @@ import { useState, useRef, useEffect } from "react";
 const languages = [
   { code: "en", name: "English", flag: "🇺🇸" },
   { code: "ar", name: "العربية", flag: "🇸🇦" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
 ];
 
 export default function LanguageSwitcher() {

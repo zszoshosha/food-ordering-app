@@ -14,6 +14,8 @@ import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/prisma";
+import { login } from "./Actions/Auth";
+import { Locale } from "@/i18n/request";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || crypto.randomUUID(),
@@ -42,12 +44,24 @@ export const authOptions: NextAuthOptions = {
           placeholder: "Enter your password",
         },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        return {
-          id: crypto.randomUUID(),
-          email: credentials.email || "",
-        };
+      authorize: async (credentials, req) => {
+        // Infer locale from the current auth page URL so validation messages
+        // returned by the server action are localized for this login request.
+        const currentUrl = req?.headers?.referer || "";
+        const locale = currentUrl.split("/")[3] as Locale;
+        const res = await login(credentials, locale);
+        if (res?.status === "200" && res?.user) {
+          return res.user;
+        } else {
+          // Pass structured errors through NextAuth's error channel so the
+          // client can decode and show a friendly toast message.
+          throw new Error(
+            JSON.stringify({
+              validationError: res.errors,
+              responseError: res.message,
+            }),
+          );
+        }
       },
     }),
     // Add your authentication providers here

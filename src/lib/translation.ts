@@ -10,10 +10,11 @@
  */
 import "server-only";
 
-import { Locale } from "@/i18n.config";
-import { Languages } from "@/constants/enums";
+import { Locale } from "@/i18n/request";
 
-// Lazy-loaded translation dictionaries for supported languages
+// Lazy-loaded translation dictionaries for server-side typed translations
+// These are separate from i18n/locales (used by next-intl for client-side).
+// The dictionaries/ folder follows the Translations type for form fields, auth, admin, etc.
 const dictionaries = {
   ar: () => import("@/dictionaries/ar.json").then((module) => module.default),
   en: () => import("@/dictionaries/en.json").then((module) => module.default),
@@ -21,10 +22,11 @@ const dictionaries = {
 
 /**
  * Loads and returns the translation dictionary for the given locale.
- * Falls back to English for any locale that isn't Arabic.
+ * Falls back to English for any unsupported locale.
  */
 const getTrans = async (locale: Locale) => {
-  return locale === Languages.ARABIC ? dictionaries.ar() : dictionaries.en();
+  const loader = dictionaries[locale as keyof typeof dictionaries] || dictionaries.en;
+  return loader();
 };
 
 export default getTrans;
