@@ -11,12 +11,14 @@
  */
 import { FormFields } from "@/components/form-fields/FormFields";
 import { Button } from "@/components/ui/button";
-import { Pages } from "@/constants/enums";
+import { Pages, Routes } from "@/constants/enums";
 import { useFormFields } from "@/hooks/useFormFields";
 import { IFormField } from "@/types/app";
 import { Translations } from "@/types/translations";
-import { Loader2 } from "lucide-react";
+import { Loader2, Route } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/router";
 import { useRef } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +27,8 @@ function Form({ translations }: { translations: Translations }) {
   // Generate form fields with translated labels based on the login page slug
   const [isLoading, setIsLoading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const route = useRouter();
+  const { locale } = useParams();
   const formFields = useFormFields({
     slug: Pages.LOGIN,
     translation: translations,
@@ -83,6 +87,7 @@ function Form({ translations }: { translations: Translations }) {
         toast.success(translations.messages.loginSuccessful, {
           className: "bg-green-500 text-white",
         });
+        route.replace(`/${locale}/${Routes.PROFILE}`);
       }
     } catch (error) {
       console.error("Sign-in error:", error);

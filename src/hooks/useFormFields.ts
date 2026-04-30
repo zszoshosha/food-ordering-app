@@ -33,6 +33,33 @@ export const useFormFields = ({ slug, translation }: props) => {
     },
   ];
 
+  const signupFields: IFormField[] = [
+    {
+      name: "name",
+      label: translation.auth.register.name.label,
+      type: "text",
+      placeholder: translation.auth.register.name.placeholder,
+    },
+    {
+      name: "email",
+      label: translation.auth.register.email.label,
+      type: "email",
+      placeholder: translation.auth.register.email.placeholder,
+    },
+    {
+      name: "password",
+      label: translation.auth.register.password.label,
+      type: "password",
+      placeholder: translation.auth.register.password.placeholder,
+    },
+    {
+      name: "confirmPassword",
+      label: translation.auth.register.confirmPassword.label,
+      type: "password",
+      placeholder: translation.auth.register.confirmPassword.placeholder,
+    },
+  ];
+
   /**
    * Returns the appropriate field configuration array based on page slug.
    * Add new cases here when adding forms for other pages (e.g., register).
@@ -41,6 +68,8 @@ export const useFormFields = ({ slug, translation }: props) => {
     switch (slug) {
       case Pages.LOGIN:
         return loginFields;
+      case Pages.Register:
+        return signupFields;
       default:
         return [];
     }

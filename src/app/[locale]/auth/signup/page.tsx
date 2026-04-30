@@ -1,13 +1,13 @@
 import Link from "@/components/link";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Pages, Routes } from "@/constants/enums";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
+import getTrans from "@/lib/translation";
+import Form from "./_components/Form";
 
 export default async function SignUpPage() {
   const locale = await getCurrentLocale();
+  const translations = await getTrans(locale);
 
   return (
     <main className="min-h-[70vh] flex items-center justify-center px-4 py-10">
@@ -19,7 +19,7 @@ export default async function SignUpPage() {
           </p>
         </div>
 
-        <form className="space-y-5">
+        {/* <form className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
             <Input
@@ -78,12 +78,13 @@ export default async function SignUpPage() {
           <Button type="submit" className="w-full" size="lg">
             Create account
           </Button>
-        </form>
+        </form> */}
+        <Form translation={translations} />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
-            href={`/${locale}/${Routes.AUTH}/${Pages.LOGIN}`}
+            href={`/${Routes.AUTH}/${Pages.LOGIN}`}
             className="font-semibold text-primary hover:underline"
           >
             Sign in

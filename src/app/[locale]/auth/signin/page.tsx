@@ -19,12 +19,11 @@ export default async function SignInPage() {
         </div>
 
         <Form translations={translations} />
-        
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
-            href={`/${locale}/${Routes.AUTH}/${Pages.Register}`}
+            href={`/${Routes.AUTH}/${Pages.Register}`}
             className="font-semibold text-primary hover:underline"
           >
             Create one

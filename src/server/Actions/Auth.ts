@@ -1,11 +1,24 @@
 "use server";
 
 import { Locale } from "@/i18n/request";
+import { getCurrentLocale } from "@/lib/getCurrentLocale";
 import { db } from "@/lib/prisma";
 import getTrans from "@/lib/translation";
-import { loginSchema } from "@/valdition/auth";
+import { loginSchema, signupSchema } from "@/valdition/auth";
 import bcrypt from "bcryptjs";
 import * as z from "zod";
+
+export type SignupState = {
+  status?: number;
+  message?: string;
+  errors: Record<string, string | string[] | undefined>;
+  formdata?: FormData;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+};
 
 export const login = async (
   credentials: Record<"email" | "password", string> | undefined,
@@ -52,6 +65,61 @@ export const login = async (
     return {
       status: "500",
       errors: { general: "An unexpected error occurred. Please try again." },
+    };
+  }
+};
+
+export const signup = async (
+  _prevstate: SignupState,
+  formdata: FormData,
+): Promise<SignupState> => {
+  const locale = await getCurrentLocale();
+  const translations = await getTrans(locale);
+  const result = signupSchema(translations).safeParse(
+    Object.fromEntries(formdata.entries()),
+  );
+  if (!result.success) {
+    return {
+      errors: z.flattenError(result.error).fieldErrors,
+      formdata,
+    };
+  }
+  try {
+    const existingUser = await db.user.findUnique({
+      where: { email: result.data.email },
+    });
+    if (existingUser) {
+      return {
+        status: 409,
+        message: translations.messages.userAlreadyExists,
+        errors: {},
+        formdata,
+      };
+    }
+    const haspaswword = await bcrypt.hash(result.data.password, 10);
+    const createdUser = await db.user.create({
+      data: {
+        name: result.data.name,
+        email: result.data.email,
+        password: haspaswword,
+      },
+    });
+    return {
+      status: 201,
+      message: translations.messages.accountCreated,
+      errors: {},
+      user: {
+        id: createdUser.id,
+        name: createdUser.name,
+        email: createdUser.email,
+      },
+    };
+  } catch (error) {
+    console.error("Signup error:", error);
+    return {
+      status: 500,
+      errors: { general: "An unexpected error occurred. Please try again." },
+      formdata,
     };
   }
 };

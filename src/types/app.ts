@@ -35,7 +35,7 @@ export interface IFormField {
   id?: string;
   defaultValue?: string;
   readOnly?: boolean;
-  error?: Record<string, string>;
+  error?: Record<string, string | string[] | undefined>;
 }
 export interface IFormFieldsVariables {
   slug: string;

@@ -25,7 +25,7 @@ export default createMiddleware({
 });
 
 export const config = {
-  // Only match the root path and paths starting with a supported locale
-  // This avoids intercepting API routes, static files, etc.
-  matcher: ["/", "/(ar|en)/:path*"],
+  // Match all page routes (with or without locale) while excluding API/static assets.
+  // This allows paths like /auth/signup to be redirected to /en/auth/signup.
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
