@@ -1,24 +1,18 @@
-"use client";
-import CartItems from "../../cart/_components/CartItems";
-import CheckOut from "../../cart/_components/CheckOut";
-import { useTranslations } from "next-intl";
+import { requireAuth } from "@/lib/requireAuth";
+import CartPageClient from "./_components/CartPageClient";
 
-const CartPage = () => {
-  const t = useTranslations("cart");
+/**
+ * Localized cart page that renders translated cart content.
+ */
+const CartPage = async ({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) => {
+  const { locale } = await params;
+  await requireAuth(locale);
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">{t("title")}</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <CartItems />
-        </div>
-        <div className="lg:col-span-1">
-          <CheckOut />
-        </div>
-      </div>
-    </div>
-  );
+  return <CartPageClient />;
 };
 
 export default CartPage;

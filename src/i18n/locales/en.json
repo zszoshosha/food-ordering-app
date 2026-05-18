@@ -5,7 +5,11 @@
     "menu": "Menu",
     "contact": "Contact",
     "cart": "Cart",
-    "language": "Language"
+    "language": "Language",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "profile": "Profile",
+    "admin": "Admin"
   },
   "hero": {
     "title": "Welcome to Pizza Palace",

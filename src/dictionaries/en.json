@@ -116,6 +116,8 @@
   },
   "profile": {
     "title": "Your Profile",
+    "subtitle": "Keep your delivery details and access information in sync.",
+    "helperText": "These fields are currently read-only while the account update flow is being connected.",
     "form": {
       "name": {
         "label": "Name",
@@ -148,6 +150,9 @@
     }
   },
   "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Track the parts of the store you manage from one place.",
+    "helperText": "Use this area to review account access and the core admin sections before the management screens are fully enabled.",
     "tabs": {
       "profile": "Profile",
       "categories": "Categories",

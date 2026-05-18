@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { formatCurrency } from "@/lib/formatters";
 import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
 import { ProductWithRelations } from "@/types/Product";
 
 /**
- * MenuItem component displays a single menu item in a card format.
- * Includes image, name, price, description, and an "Add to Cart" button.
- * Used within the Menu component to render a list of items.
- * @param {Object} item - The menu item object containing name, description, basePrice, and image.
+ * Displays a single product card in the menu grid.
+ * Includes product image, starting price, description, and add-to-cart action.
+ * @param {ProductWithRelations} item - Product to render.
  */
 const MenuItem = ({ item }: { item: ProductWithRelations }) => {
   const basePrice = Number(item.basePrice || 0);

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { getTotal } from "@/lib/cart";
 import { formatCurrency } from "@/lib/formatters";
 
+/**
+ * Order summary panel with subtotal, tax, shipping, and checkout actions.
+ */
 const CheckOut = () => {
   const items = useAppSelector(selectCartItems);
   const subtotal = getTotal(items);

@@ -104,6 +104,8 @@ export type Translations = {
   };
   profile: {
     title: string;
+    subtitle: string;
+    helperText: string;
     form: {
       name: Field;
       email: Field;
@@ -115,6 +117,9 @@ export type Translations = {
     };
   };
   admin: {
+    title: string;
+    subtitle: string;
+    helperText: string;
     tabs: {
       profile: string;
       categories: string;

@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ProductWithRelations } from "@/types/Product";
 import MenuItem from "./MenuItem";
 
 /**
- * Menu component renders a grid of menu items.
- * @param {Array} items - Array of menu item objects to display.
+ * Renders a responsive grid of menu cards.
+ * @param {ProductWithRelations[]} items - Products to display.
  */
 function Menu({ items }: { items: ProductWithRelations[] }) {
   return (

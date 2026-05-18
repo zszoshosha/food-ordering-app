@@ -4,6 +4,9 @@ import { getCurrentLocale } from "@/lib/getCurrentLocale";
 import getTrans from "@/lib/translation";
 import Form from "./_components/Form";
 
+/**
+ * Sign-in page that loads locale-specific translations on the server.
+ */
 export default async function SignInPage() {
   const locale = await getCurrentLocale();
   const translations = await getTrans(locale);
@@ -23,7 +26,7 @@ export default async function SignInPage() {
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
-            href={`/${Routes.AUTH}/${Pages.Register}`}
+            href={`/${Routes.AUTH}/${Pages.REGISTER}`}
             className="font-semibold text-primary hover:underline"
           >
             Create one

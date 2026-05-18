@@ -30,8 +30,7 @@ export default function MenuPage() {
   useEffect(() => {
     /**
      * Fetch products from the API route on component mount.
-     * Changed from direct DB call (GetproductsByDb) to fetch("/api/products")
-     * because Prisma/server code cannot be imported in client components.
+     * Uses the API route so Prisma stays server-side.
      * The API route handles the DB query server-side and returns JSON.
      */
     const fetchProducts = async () => {
@@ -98,7 +97,7 @@ export default function MenuPage() {
                 onClick={() => filterByCategory(category.id)}
                 variant={activeCategory === category.id ? "default" : "outline"}
                 size="lg"
-                className="min-w-[120px]"
+                className="min-w-30"
               >
                 <span className="mr-2">{category.icon}</span>
                 {category.name}

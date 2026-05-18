@@ -4,7 +4,7 @@ import { Locale } from "@/i18n/request";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
 import { db } from "@/lib/prisma";
 import getTrans from "@/lib/translation";
-import { loginSchema, signupSchema } from "@/valdition/auth";
+import { loginSchema, signupSchema } from "@/validation/auth";
 import bcrypt from "bcryptjs";
 import * as z from "zod";
 
@@ -17,6 +17,7 @@ export type SignupState = {
     id: string;
     name: string | null;
     email: string;
+    role: "USER" | "ADMIN";
   };
 };
 
@@ -57,7 +58,12 @@ export const login = async (
     return {
       status: "200",
       errors: undefined,
-      user,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
       message: translations.messages.loginSuccessful,
     };
   } catch (error) {
@@ -96,12 +102,12 @@ export const signup = async (
         formdata,
       };
     }
-    const haspaswword = await bcrypt.hash(result.data.password, 10);
+    const hashedPassword = await bcrypt.hash(result.data.password, 10);
     const createdUser = await db.user.create({
       data: {
         name: result.data.name,
         email: result.data.email,
-        password: haspaswword,
+        password: hashedPassword,
       },
     });
     return {
@@ -112,6 +118,7 @@ export const signup = async (
         id: createdUser.id,
         name: createdUser.name,
         email: createdUser.email,
+        role: createdUser.role,
       },
     };
   } catch (error) {

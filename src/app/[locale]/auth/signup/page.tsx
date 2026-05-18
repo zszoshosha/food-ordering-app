@@ -1,10 +1,14 @@
 import Link from "@/components/link";
-
 import { Pages, Routes } from "@/constants/enums";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
 import getTrans from "@/lib/translation";
 import Form from "./_components/Form";
 
+/**
+ * Sign-Up page — server component.
+ * Loads the current locale and translations server-side,
+ * then passes them to the client-side Form component.
+ */
 export default async function SignUpPage() {
   const locale = await getCurrentLocale();
   const translations = await getTrans(locale);
@@ -19,66 +23,6 @@ export default async function SignUpPage() {
           </p>
         </div>
 
-        {/* <form className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full name</Label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              placeholder="Enter your full name"
-              autoComplete="name"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Create a password"
-              autoComplete="new-password"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm password</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              autoComplete="new-password"
-              required
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox id="terms" name="terms" required />
-            <Label htmlFor="terms" className="text-sm font-normal">
-              I agree to the terms and privacy policy
-            </Label>
-          </div>
-
-          <Button type="submit" className="w-full" size="lg">
-            Create account
-          </Button>
-        </form> */}
         <Form translation={translations} />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

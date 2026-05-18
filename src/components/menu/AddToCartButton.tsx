@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Image from "next/image";
@@ -25,12 +24,12 @@ import {
   selectCartItems,
 } from "@/redux/features/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { getCartTotal } from "@/lib/cart";
+import { getCartItemQuantity } from "@/lib/cart";
 
 /**
- * AddToCartButton component opens a dialog for customizing and adding an item to the cart.
- * Allows selection of size and extras, displays item details.
- * @param {Object} item - The menu item object.
+ * Renders the add-to-cart trigger and customization dialog for a product.
+ * Users can pick size, extras, and adjust quantity for the same configuration.
+ * @param {Object} item - Product data with sizes and extras.
  */
 const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
   const cart = useAppSelector(selectCartItems);
@@ -41,7 +40,7 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
     cart.find((cartItem) => cartItem.id === item.id)?.size ||
     item.sizes.find((size) => size.name.toUpperCase() === ProductSize.SMALL);
   const [selectedSize, setSelectedSize] = useState<Size>(defaultSize!);
-  const itemTotal = getCartTotal(item.id, cart);
+  const itemQuantity = getCartItemQuantity(item.id, cart);
   const totalPrice = useMemo(() => {
     const extrasTotal = selectedExtra.reduce(
       (sum, extra) => sum + extra.price,
@@ -50,7 +49,7 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
     return item.basePrice + selectedSize.price + extrasTotal;
   }, [item.basePrice, selectedSize.price, selectedExtra]);
 
-  function AddToCartButton() {
+  const handleAddToCart = () => {
     dispatch(
       addCartItem({
         size: selectedSize,
@@ -61,8 +60,7 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
         image: item.image,
       }),
     );
-    return;
-  }
+  };
   return (
     <Dialog>
       <>
@@ -106,8 +104,8 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
             </div>
           </div>
           <DialogFooter>
-            {itemTotal === 0 ? (
-              <Button type="submit" onClick={AddToCartButton}>
+            {itemQuantity === 0 ? (
+              <Button type="submit" onClick={handleAddToCart}>
                 Add to Cart {formatCurrency(totalPrice)}
               </Button>
             ) : (
@@ -116,7 +114,7 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
                 selectedSize={selectedSize}
                 selectedExtra={selectedExtra}
                 totalPrice={totalPrice}
-                itemTotal={itemTotal}
+                itemQuantity={itemQuantity}
               />
             )}
           </DialogFooter>
@@ -129,9 +127,9 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
 export default AddToCartButton;
 
 /**
- * PickSize component renders radio buttons for selecting item size.
- * @param {Array} sizes - Array of size options.
- * @param {Object} item - The menu item for price calculation.
+ * Renders size options as a radio group.
+ * @param {Size[]} sizes - Available size options.
+ * @param {ProductWithRelations} item - Product used to compute displayed price.
  */
 function PickSize({
   sizes,
@@ -171,10 +169,10 @@ function PickSize({
 }
 
 /**
- * Extras component renders checkboxes for selecting extra toppings.
- * @param {Array} extras - Array of extra options.
- * @param {Array} selectedExtra - Currently selected extras.
- * @param {Function} setSelectedExtra - Function to update selected extras.
+ * Renders optional extras as checkboxes.
+ * @param {Extra[]} extras - Available extra options.
+ * @param {Extra[]} selectedExtra - Currently selected extras.
+ * @param {React.Dispatch<React.SetStateAction<Extra[]>>} setSelectedExtra - State updater.
  */
 function Extras({
   extras,
@@ -214,18 +212,21 @@ function Extras({
   ));
 }
 
+/**
+ * Quantity controls shown when an item configuration already exists in the cart.
+ */
 const ChooseQuantity = ({
   item,
   selectedSize,
   selectedExtra,
   totalPrice,
-  itemTotal,
+  itemQuantity,
 }: {
   item: ProductWithRelations;
   selectedSize: Size;
   selectedExtra: Extra[];
   totalPrice: number;
-  itemTotal: number;
+  itemQuantity: number;
 }) => {
   const dispatch = useAppDispatch();
 
@@ -255,11 +256,13 @@ const ChooseQuantity = ({
           size="sm"
           className="rounded-full w-9 h-9 p-0"
           onClick={handleDecrease}
-          disabled={itemTotal <= 1}
+          disabled={itemQuantity <= 1}
         >
           -
         </Button>
-        <span className="min-w-6 text-center font-semibold">{itemTotal}</span>
+        <span className="min-w-6 text-center font-semibold">
+          {itemQuantity}
+        </span>
         <Button
           type="button"
           variant="secondary"

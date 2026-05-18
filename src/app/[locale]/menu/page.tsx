@@ -73,7 +73,7 @@ export default function MenuPage() {
               key={category.id}
               onClick={() => filterByCategory(category.id)}
               variant={activeCategory === category.id ? "default" : "outline"}
-              className="min-w-[120px]"
+              className="min-w-30"
             >
               <span className="mr-2">{category.icon}</span>
               {category.name}

@@ -9,7 +9,7 @@
  * - JWT sessions with 7-day max age and 24-hour update interval
  * - Custom sign-in and sign-out page routes
  */
-import { Environments, Pages, Routes } from "@/constants/enums";
+import { Environments, Pages, Routes, UserRole } from "@/constants/enums";
 import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -27,7 +27,40 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: `/${Routes.AUTH}/${Pages.LOGIN}`,
-    signOut: `/${Routes.AUTH}/${Pages.Register}`,
+    signOut: `/${Routes.AUTH}/${Pages.REGISTER}`,
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.role = (user as { role?: UserRole }).role ?? UserRole.USER;
+      }
+
+      if (!token.role) {
+        token.role = UserRole.USER;
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (token.id) {
+        session.user.id = token.id;
+      }
+
+      if (token.name) {
+        session.user.name = token.name;
+      }
+
+      if (token.email) {
+        session.user.email = token.email;
+      }
+
+      session.user.role = (token.role as UserRole | undefined) ?? UserRole.USER;
+
+      return session;
+    },
   },
   providers: [
     Credentials({

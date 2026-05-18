@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import MainHeading from "@/components/main-heading";
 import Menu from "@/components/menu";
-import { GetproductsByDb } from "@/server/db/product";
+import { getProductsByDb } from "@/server/db/product";
 import React from "react";
 
 /**
@@ -9,7 +9,7 @@ import React from "react";
  * Fetches products from the database and renders them in a menu grid.
  */
 const Bestsellers = async () => {
-  const bestSellers = await GetproductsByDb();
+  const bestSellers = await getProductsByDb();
 
   return (
     <section>

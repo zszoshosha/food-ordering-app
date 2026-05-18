@@ -2,6 +2,9 @@
 import CartItems from "./_components/CartItems";
 import CheckOut from "./_components/CheckOut";
 
+/**
+ * Cart page that shows cart items alongside the order summary.
+ */
 const CartPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">

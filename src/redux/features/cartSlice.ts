@@ -6,7 +6,7 @@ import { RootState } from "../store";
  * Cart Item Type Definition
  * Represents a single product in the shopping cart with all its customizations
  */
-export type cartItem = {
+export type CartItem = {
   name: string; // Product name
   id: string; // Product ID
   image: string; // Product image URL
@@ -20,15 +20,15 @@ export type cartItem = {
  * Cart State Type
  * Manages the collection of cart items
  */
-type cartState = {
-  items: cartItem[];
+type CartState = {
+  items: CartItem[];
 };
 /**
  * Initial state - starts with empty cart
  * Note: localStorage is synced from CartItems component on client-side only
  * This avoids hydration issues in Next.js SSR
  */
-const initialState: cartState = {
+const initialState: CartState = {
   items: [],
 };
 
@@ -38,7 +38,7 @@ const initialState: cartState = {
  * @param item - The cart item to generate a key for
  * @returns A unique string key combining product id + size + extras
  */
-const getCartItemKey = (item: cartItem) => {
+const getCartItemKey = (item: CartItem) => {
   const sizeId = item.size?.id ?? "no-size";
   const extrasKey =
     item.extras
@@ -58,7 +58,7 @@ export const cartSlice = createSlice({
      * If yes: increments quantity by 1
      * If no: adds new item with quantity 1
      */
-    addCartItem: (state, action: PayloadAction<cartItem>) => {
+    addCartItem: (state, action: PayloadAction<CartItem>) => {
       const incomingKey = getCartItemKey(action.payload);
       const existingItem = state.items.find(
         (item) => getCartItemKey(item) === incomingKey,
@@ -95,7 +95,7 @@ export const cartSlice = createSlice({
      * Called once on mount in CartItems component to restore the cart
      * after SSR hydration (avoids mismatch between server and client state).
      */
-    hydrateCart: (state, action: PayloadAction<cartItem[]>) => {
+    hydrateCart: (state, action: PayloadAction<CartItem[]>) => {
       state.items = action.payload;
     },
     clearCart: (state) => {
@@ -116,6 +116,7 @@ export const {
   removeItemFromCart,
   hydrateCart,
   clearCart,
+  incrementQuantity,
 } = cartSlice.actions;
 export default cartSlice.reducer;
 

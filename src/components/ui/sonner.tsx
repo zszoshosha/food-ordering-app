@@ -9,6 +9,9 @@ import {
   Loader2Icon,
 } from "lucide-react";
 
+/**
+ * Application toast provider with consistent icon mapping and styling.
+ */
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner

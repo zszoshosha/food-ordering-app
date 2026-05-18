@@ -7,7 +7,7 @@ import { signup, type SignupState } from "@/server/Actions/Auth";
 import { IFormField } from "@/types/app";
 import { Translations } from "@/types/translations";
 import { useParams, useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const initialState: SignupState = {
@@ -15,15 +15,25 @@ const initialState: SignupState = {
   formdata: new FormData(),
 };
 
+/**
+ * Sign-up form wired to the server action and localized field metadata.
+ */
 function Form({ translation }: { translation: Translations }) {
   const route = useRouter();
   const { locale } = useParams();
+  const localeValue =
+    typeof locale === "string"
+      ? locale
+      : Array.isArray(locale)
+        ? locale[0]
+        : "en";
+  const localeRef = useRef(localeValue);
   const [state, action, pending] = useActionState<SignupState, FormData>(
     signup,
     initialState,
   );
   const getformFields = useFormFields({
-    slug: Pages.Register,
+    slug: Pages.REGISTER,
     translation,
   });
   useEffect(() => {
@@ -36,7 +46,7 @@ function Form({ translation }: { translation: Translations }) {
       });
     }
     if (state.status === 201) {
-      route.replace(`/${locale}/${Routes.AUTH}/${Pages.LOGIN}`);
+      route.replace(`/${localeRef.current}/${Routes.AUTH}/${Pages.LOGIN}`);
     }
   }, [state, route]);
   return (
