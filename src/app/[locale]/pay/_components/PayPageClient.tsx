@@ -57,8 +57,11 @@ const PayPageClient = ({ locale }: { locale: string }) => {
       })),
     };
 
+    let checkoutToastId: string | number | undefined;
+
     try {
       setIsSubmitting(true);
+      checkoutToastId = toast.loading(t("processing"));
 
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -77,6 +80,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
       if (!response.ok) {
         const errorMessage = !result.success ? result.error : t("orderError");
         toast.error(errorMessage ?? t("orderError"), {
+          id: checkoutToastId,
           className: "bg-red-500 text-white",
         });
         return;
@@ -84,10 +88,15 @@ const PayPageClient = ({ locale }: { locale: string }) => {
 
       if (!result.success) {
         toast.error(result.error ?? t("orderError"), {
+          id: checkoutToastId,
           className: "bg-red-500 text-white",
         });
         return;
       }
+
+      toast.loading("Preparing payment...", {
+        id: checkoutToastId,
+      });
 
       const paymentIntentResponse = await fetch("/api/stripe/payment-intent", {
         method: "POST",
@@ -97,12 +106,13 @@ const PayPageClient = ({ locale }: { locale: string }) => {
         body: JSON.stringify({ orderId: result.data.id }),
       });
 
-      const paymentIntentResult = (await paymentIntentResponse.json()) as ActionResponse<{
-        orderId: string;
-        paymentIntentId: string;
-        clientSecret: string;
-        simulated: boolean;
-      }>;
+      const paymentIntentResult =
+        (await paymentIntentResponse.json()) as ActionResponse<{
+          orderId: string;
+          paymentIntentId: string;
+          clientSecret: string;
+          simulated: boolean;
+        }>;
 
       if (!paymentIntentResponse.ok || !paymentIntentResult.success) {
         toast.error(
@@ -110,6 +120,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
             ? paymentIntentResult.error
             : t("orderError"),
           {
+            id: checkoutToastId,
             className: "bg-red-500 text-white",
           },
         );
@@ -117,6 +128,10 @@ const PayPageClient = ({ locale }: { locale: string }) => {
       }
 
       if (paymentIntentResult.data.simulated) {
+        toast.loading("Confirming payment...", {
+          id: checkoutToastId,
+        });
+
         const confirmResponse = await fetch("/api/stripe/mock-confirm", {
           method: "POST",
           headers: {
@@ -138,6 +153,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
           toast.error(
             !confirmResult.success ? confirmResult.error : t("orderError"),
             {
+              id: checkoutToastId,
               className: "bg-red-500 text-white",
             },
           );
@@ -147,6 +163,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
 
       dispatch(clearCart());
       toast.success(t("orderSuccess"), {
+        id: checkoutToastId,
         className: "bg-green-500 text-white",
       });
 
@@ -154,6 +171,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
       router.refresh();
     } catch {
       toast.error(t("orderError"), {
+        id: checkoutToastId,
         className: "bg-red-500 text-white",
       });
     } finally {

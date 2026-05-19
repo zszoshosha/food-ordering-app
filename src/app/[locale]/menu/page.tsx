@@ -6,6 +6,31 @@ import { ProductWithRelations } from "@/types/Product";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 
+const DEFAULT_CATEGORY_IDS = [
+  "CLASSIC",
+  "SPECIALTY",
+  "VEGETARIAN",
+  "MEAT",
+  "SEAFOOD",
+];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  ALL: "🍕",
+  CLASSIC: "🍕",
+  SPECIALTY: "⭐",
+  VEGETARIAN: "🥗",
+  MEAT: "🥓",
+  SEAFOOD: "🦐",
+};
+
+const CATEGORY_TRANSLATION_KEY: Record<string, string> = {
+  CLASSIC: "categories.classic",
+  SPECIALTY: "categories.specialty",
+  VEGETARIAN: "categories.vegetarian",
+  MEAT: "categories.meat",
+  SEAFOOD: "categories.seafood",
+};
+
 /**
  * Menu page component with category filtering.
  * Displays all menu items organized by categories.
@@ -21,15 +46,22 @@ export default function MenuPage() {
   const [sortBy, setSortBy] = useState("name-asc");
   const [loading, setLoading] = useState(true);
   const [hasFetchError, setHasFetchError] = useState(false);
+  const [availableCategoryIds, setAvailableCategoryIds] =
+    useState<string[]>(DEFAULT_CATEGORY_IDS);
 
-  // Categories for pizza types (matching ProductCategory enum)
   const categories = [
-    { id: "ALL", name: t("categories.all"), icon: "🍕" },
-    { id: "CLASSIC", name: t("categories.classic"), icon: "🍕" },
-    { id: "SPECIALTY", name: t("categories.specialty"), icon: "⭐" },
-    { id: "VEGETARIAN", name: t("categories.vegetarian"), icon: "🥗" },
-    { id: "MEAT", name: t("categories.meat"), icon: "🥓" },
-    { id: "SEAFOOD", name: t("categories.seafood"), icon: "🦐" },
+    {
+      id: "ALL",
+      name: t("categories.all"),
+      icon: CATEGORY_ICONS.ALL,
+    },
+    ...availableCategoryIds.map((categoryId) => ({
+      id: categoryId,
+      name: CATEGORY_TRANSLATION_KEY[categoryId]
+        ? t(CATEGORY_TRANSLATION_KEY[categoryId])
+        : categoryId,
+      icon: CATEGORY_ICONS[categoryId] ?? "🍽️",
+    })),
   ];
 
   const fetchProducts = async () => {
@@ -37,10 +69,24 @@ export default function MenuPage() {
     setHasFetchError(false);
 
     try {
-      const response = await fetch("/api/products", { cache: "no-store" });
-      if (!response.ok) throw new Error("Failed to fetch products");
-      const data: ProductWithRelations[] = await response.json();
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        fetch("/api/products", { cache: "force-cache" }),
+        fetch("/api/products/categories", { cache: "force-cache" }),
+      ]);
+
+      if (!productsResponse.ok) {
+        throw new Error("Failed to fetch products");
+      }
+
+      const data: ProductWithRelations[] = await productsResponse.json();
       setProducts(data);
+
+      if (categoriesResponse.ok) {
+        const fetchedCategories = (await categoriesResponse.json()) as string[];
+        if (fetchedCategories.length > 0) {
+          setAvailableCategoryIds(fetchedCategories);
+        }
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
       setProducts([]);

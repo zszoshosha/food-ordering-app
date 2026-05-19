@@ -15,7 +15,7 @@ import {
 import { ActionResponse } from "@/types/action-response";
 import { ProductWithRelations } from "@/types/Product";
 import { adminProductSchema } from "@/validation/admin";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useOptimistic, useState } from "react";
 import { toast } from "sonner";
 import type { ZodIssue } from "zod";
 
@@ -58,6 +58,12 @@ type ExtraIngredientValue = "CHEESE" | "BACON" | "MUSHROOMS" | "PEPPERS";
 type AdminDashboardProps = {
   locale: string;
 };
+
+type ProductOptimisticAction =
+  | { type: "remove"; id: string }
+  | { type: "upsert"; product: ProductWithRelations };
+
+type OrderOptimisticAction = { id: string; status: AdminOrderStatus };
 
 const PRODUCT_CATEGORY_OPTIONS: Array<{
   value: ProductCategoryValue;
@@ -211,6 +217,38 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
   });
   const [isOverviewLoading, setIsOverviewLoading] = useState(false);
 
+  const [optimisticProducts, applyProductOptimistic] = useOptimistic(
+    products,
+    (
+      currentProducts: ProductWithRelations[],
+      action: ProductOptimisticAction,
+    ) => {
+      if (action.type === "remove") {
+        return currentProducts.filter((item) => item.id !== action.id);
+      }
+
+      const index = currentProducts.findIndex(
+        (item) => item.id === action.product.id,
+      );
+
+      if (index === -1) {
+        return [...currentProducts, action.product];
+      }
+
+      const next = [...currentProducts];
+      next[index] = action.product;
+      return next;
+    },
+  );
+
+  const [optimisticOrders, applyOrderOptimistic] = useOptimistic(
+    ordersData.items,
+    (currentOrders: AdminOrderListItem[], action: OrderOptimisticAction) =>
+      currentOrders.map((item) =>
+        item.id === action.id ? { ...item, status: action.status } : item,
+      ),
+  );
+
   const tabLabels = useMemo(
     () => ({
       menuItems: locale === "ar" ? "عناصر القائمة" : "Menu Items",
@@ -219,6 +257,36 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
     }),
     [locale],
   );
+
+  const analyticsBars = useMemo(() => {
+    const data = [
+      { label: "Revenue", value: overview.totalRevenue, color: "#f97316" },
+      { label: "Orders", value: overview.totalOrders, color: "#3b82f6" },
+      { label: "Users", value: overview.totalUsers, color: "#10b981" },
+      {
+        label: "Products",
+        value: overview.totalProducts,
+        color: "#ef4444",
+      },
+    ];
+
+    const maxValue = Math.max(1, ...data.map((item) => item.value));
+    return data.map((item) => ({
+      ...item,
+      percent: (item.value / maxValue) * 100,
+    }));
+  }, [overview]);
+
+  const analyticsTrend = useMemo(() => {
+    const base = Math.max(overview.totalRevenue, 1);
+    return [0.35, 0.42, 0.39, 0.56, 0.63, 0.58, 0.74, 0.7].map(
+      (multiplier, index) => {
+        const x = 20 + index * 40;
+        const y = 150 - (base * multiplier) / Math.max(base, 1) * 110;
+        return `${x},${Math.max(18, Math.min(150, y))}`;
+      },
+    );
+  }, [overview.totalRevenue]);
 
   /**
    * Clears a single product field error after user edits it.
@@ -530,7 +598,7 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         ? `/api/admin/products?id=${productForm.id}`
         : "/api/admin/products";
 
-      const response = await fetch(endpoint, {
+      const submitPromise = fetch(endpoint, {
         method: isEditing ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
@@ -541,6 +609,13 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         }),
       });
 
+      toast.promise(submitPromise, {
+        loading: isEditing ? "Updating product..." : "Creating product...",
+        success: isEditing ? "Product updated." : "Product created.",
+        error: isEditing ? "Failed to update product." : "Failed to create product.",
+      });
+
+      const response = await submitPromise;
       const result =
         (await response.json()) as ActionResponse<ProductWithRelations>;
 
@@ -570,11 +645,14 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         throw new Error("Failed to save product.");
       }
 
+      if (result.success) {
+        applyProductOptimistic({ type: "upsert", product: result.data });
+      }
+
       setIsProductModalOpen(false);
       setProductFormErrors({});
       setProductFormError("");
       await fetchProducts();
-      toast.success(isEditing ? "Product updated." : "Product created.");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save product.";
@@ -589,10 +667,20 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
    * Deletes a product and refreshes the products list.
    */
   const removeProduct = async (productId: string) => {
+      applyProductOptimistic({ type: "remove", id: productId });
+
     try {
-      const response = await fetch(`/api/admin/products?id=${productId}`, {
+        const deletePromise = fetch(`/api/admin/products?id=${productId}`, {
         method: "DELETE",
       });
+
+        toast.promise(deletePromise, {
+          loading: "Deleting product...",
+          success: "Product deleted.",
+          error: "Failed to delete product.",
+        });
+
+        const response = await deletePromise;
 
       const payload = (await response.json()) as ActionResponse<{
         deleted: true;
@@ -607,8 +695,8 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
       }
 
       setProducts((prev) => prev.filter((item) => item.id !== productId));
-      toast.success("Product deleted.");
     } catch (error) {
+      await fetchProducts();
       const message =
         error instanceof Error ? error.message : "Failed to delete product.";
       toast.error(message);
@@ -623,22 +711,24 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
     status: AdminOrderStatus,
   ) => {
     const previousItems = ordersData.items;
-
-    setOrdersData((prev) => ({
-      ...prev,
-      items: prev.items.map((item) =>
-        item.id === orderId ? { ...item, status } : item,
-      ),
-    }));
+    applyOrderOptimistic({ id: orderId, status });
 
     try {
-      const response = await fetch("/api/admin/orders", {
+      const updatePromise = fetch("/api/admin/orders", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ orderId, status }),
       });
+
+      toast.promise(updatePromise, {
+        loading: "Updating order status...",
+        success: "Order status updated.",
+        error: "Failed to update order status.",
+      });
+
+      const response = await updatePromise;
 
       const payload = (await response.json()) as ActionResponse<{
         id: string;
@@ -669,8 +759,6 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
           ),
         }));
       }
-
-      toast.success("Order status updated.");
     } catch (error) {
       setOrdersData((prev) => ({ ...prev, items: previousItems }));
       const message =
@@ -764,6 +852,81 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         </div>
       </div>
 
+      <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border bg-background p-4">
+          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            Revenue Trend (Mock)
+          </p>
+          <svg viewBox="0 0 320 170" className="mt-3 h-44 w-full">
+            <polyline
+              points={analyticsTrend.join(" ")}
+              fill="none"
+              stroke="#f97316"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <line
+              x1="20"
+              y1="150"
+              x2="300"
+              y2="150"
+              stroke="hsl(var(--border))"
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
+
+        <div className="rounded-2xl border bg-background p-4">
+          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            Snapshot Mix
+          </p>
+          <svg viewBox="0 0 280 150" className="mt-4 h-40 w-full">
+            {analyticsBars.map((metric, index) => {
+              const y = 10 + index * 34;
+              const width = Math.max(8, metric.percent * 2.2);
+              return (
+                <g key={metric.label}>
+                  <text
+                    x="0"
+                    y={y + 8}
+                    fill="hsl(var(--muted-foreground))"
+                    fontSize="11"
+                  >
+                    {metric.label}
+                  </text>
+                  <rect
+                    x="80"
+                    y={y}
+                    width="180"
+                    height="10"
+                    rx="5"
+                    fill="hsl(var(--muted))"
+                  />
+                  <rect
+                    x="80"
+                    y={y}
+                    width={width}
+                    height="10"
+                    rx="5"
+                    fill={metric.color}
+                  />
+                  <text
+                    x="266"
+                    y={y + 8}
+                    textAnchor="end"
+                    fill="hsl(var(--muted-foreground))"
+                    fontSize="11"
+                  >
+                    {Math.round(metric.value).toLocaleString()}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+
       {activeTab === "menuItems" && (
         <div className="mt-6 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -786,7 +949,7 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {optimisticProducts.map((product) => (
                     <tr key={product.id} className="border-t">
                       <td className="px-3 py-2">{product.name}</td>
                       <td className="px-3 py-2">{product.category}</td>
@@ -961,7 +1124,7 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {ordersData.items.map((order) => (
+                  {optimisticOrders.map((order) => (
                     <tr key={order.id} className="border-t">
                       <td className="px-3 py-2">{order.id.slice(0, 8)}</td>
                       <td className="px-3 py-2">

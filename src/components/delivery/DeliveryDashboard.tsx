@@ -81,6 +81,8 @@ const DeliveryDashboard = () => {
 
   const markDelivered = async (orderId: string) => {
     setUpdatingId(orderId);
+    const toastId = toast.loading("Marking order as delivered...");
+
     try {
       const response = await fetch("/api/delivery/orders", {
         method: "PATCH",
@@ -106,13 +108,13 @@ const DeliveryDashboard = () => {
       }
 
       setOrders((current) => current.filter((item) => item.id !== orderId));
-      toast.success("Order marked as delivered.");
+      toast.success("Order marked as delivered.", { id: toastId });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Failed to mark order as delivered.";
-      toast.error(message);
+      toast.error(message, { id: toastId });
     } finally {
       setUpdatingId(null);
     }

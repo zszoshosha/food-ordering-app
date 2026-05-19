@@ -25,6 +25,7 @@ import {
 } from "@/redux/features/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { getCartItemQuantity } from "@/lib/cart";
+import { toast } from "sonner";
 
 /**
  * Renders the add-to-cart trigger and customization dialog for a product.
@@ -56,16 +57,23 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
   }, [item.basePrice, selectedSize?.price, selectedExtra]);
 
   const handleAddToCart = () => {
-    dispatch(
-      addCartItem({
-        size: selectedSize ?? undefined,
-        extras: selectedExtra,
-        basePrice: item.basePrice,
-        name: item.name,
-        id: item.id,
-        image: item.image,
-      }),
-    );
+    const toastId = toast.loading("Adding item to cart...");
+
+    try {
+      dispatch(
+        addCartItem({
+          size: selectedSize ?? undefined,
+          extras: selectedExtra,
+          basePrice: item.basePrice,
+          name: item.name,
+          id: item.id,
+          image: item.image,
+        }),
+      );
+      toast.success("Added to cart.", { id: toastId });
+    } catch {
+      toast.error("Failed to update cart.", { id: toastId });
+    }
   };
   return (
     <Dialog>
@@ -243,20 +251,34 @@ const ChooseQuantity = ({
   const dispatch = useAppDispatch();
 
   const handleIncrease = () => {
-    dispatch(
-      addCartItem({
-        size: selectedSize ?? undefined,
-        extras: selectedExtra,
-        basePrice: item.basePrice,
-        name: item.name,
-        id: item.id,
-        image: item.image,
-      }),
-    );
+    const toastId = toast.loading("Updating cart...");
+
+    try {
+      dispatch(
+        addCartItem({
+          size: selectedSize ?? undefined,
+          extras: selectedExtra,
+          basePrice: item.basePrice,
+          name: item.name,
+          id: item.id,
+          image: item.image,
+        }),
+      );
+      toast.success("Cart updated.", { id: toastId });
+    } catch {
+      toast.error("Failed to update cart.", { id: toastId });
+    }
   };
 
   const handleDecrease = () => {
-    dispatch(removeCartItem({ id: item.id }));
+    const toastId = toast.loading("Updating cart...");
+
+    try {
+      dispatch(removeCartItem({ id: item.id }));
+      toast.success("Cart updated.", { id: toastId });
+    } catch {
+      toast.error("Failed to update cart.", { id: toastId });
+    }
   };
 
   return (

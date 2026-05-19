@@ -29,7 +29,12 @@ import {
 } from "../../validation/admin";
 import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
+import { revalidateTag } from "next/cache";
 import * as z from "zod";
+import {
+  CATEGORY_CACHE_TAG,
+  MENU_CACHE_TAG,
+} from "../../server/db/product";
 
 type AdminOrderQuery = PaginationQuery & {
   status?: string;
@@ -60,6 +65,11 @@ const requireAdminSession = async (): Promise<
   }
 
   return actionSuccess({ userId: user.id });
+};
+
+const revalidatePublicMenuCache = () => {
+  revalidateTag(MENU_CACHE_TAG, "max");
+  revalidateTag(CATEGORY_CACHE_TAG, "max");
 };
 
 const validateProductId = (productId: string) => {
@@ -227,6 +237,8 @@ export const createAdminProduct = async (
       }),
     );
 
+    revalidatePublicMenuCache();
+
     return actionSuccess(created);
   } catch {
     return actionError("Failed to create product.");
@@ -300,6 +312,8 @@ export const updateAdminProduct = async (
       });
     });
 
+    revalidatePublicMenuCache();
+
     return actionSuccess(updated);
   } catch {
     return actionError("Failed to update product.");
@@ -337,6 +351,8 @@ export const deleteAdminProduct = async (
       await tx.extra.deleteMany({ where: { productId: validProductId.data } });
       await tx.product.delete({ where: { id: validProductId.data } });
     });
+
+    revalidatePublicMenuCache();
 
     return actionSuccess({ deleted: true });
   } catch {
