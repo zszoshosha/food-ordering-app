@@ -15,7 +15,10 @@ export default function MenuPage() {
     ProductWithRelations[]
   >([]);
   const [activeCategory, setActiveCategory] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("name-asc");
   const [loading, setLoading] = useState(true);
+  const [hasFetchError, setHasFetchError] = useState(false);
 
   // Categories for pizza types (matching ProductCategory enum)
   const categories = [
@@ -27,42 +30,66 @@ export default function MenuPage() {
     { id: "SEAFOOD", name: "Seafood", icon: "🦐" },
   ];
 
-  useEffect(() => {
-    /**
-     * Fetch products from the API route on component mount.
-     * Uses the API route so Prisma stays server-side.
-     * The API route handles the DB query server-side and returns JSON.
-     */
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("/api/products");
-        if (!response.ok) throw new Error("Failed to fetch products");
-        const data: ProductWithRelations[] = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  /**
+   * Fetch products from the API route.
+   * Uses the API route so Prisma stays server-side.
+   */
+  const fetchProducts = async () => {
+    setLoading(true);
+    setHasFetchError(false);
 
+    try {
+      const response = await fetch("/api/products", { cache: "no-store" });
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data: ProductWithRelations[] = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setProducts([]);
+      setHasFetchError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, []);
 
-  // Filter products by category using the database category field
-  const filterByCategory = (category: string) => {
-    setActiveCategory(category);
+  useEffect(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const next = products
+      .filter((product) =>
+        activeCategory === "ALL" ? true : product.category === activeCategory,
+      )
+      .filter((product) => {
+        if (!normalizedSearch) return true;
+        return (
+          product.name.toLowerCase().includes(normalizedSearch) ||
+          product.description.toLowerCase().includes(normalizedSearch)
+        );
+      })
+      .sort((a, b) => {
+        const minA = Math.min(...a.sizes.map((s) => Number(s.price || 0)), 0);
+        const minB = Math.min(...b.sizes.map((s) => Number(s.price || 0)), 0);
+        const priceA = Number(a.basePrice || 0) + minA;
+        const priceB = Number(b.basePrice || 0) + minB;
 
-    if (category === "ALL") {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter(
-        (product) => product.category === category,
-      );
-      setFilteredProducts(filtered);
-    }
-  };
+        switch (sortBy) {
+          case "price-asc":
+            return priceA - priceB;
+          case "price-desc":
+            return priceB - priceA;
+          case "name-desc":
+            return b.name.localeCompare(a.name);
+          case "name-asc":
+          default:
+            return a.name.localeCompare(b.name);
+        }
+      });
+
+    setFilteredProducts(next);
+  }, [products, activeCategory, searchTerm, sortBy]);
 
   if (loading) {
     return (
@@ -76,7 +103,7 @@ export default function MenuPage() {
   }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen page-surface">
       <div className="container py-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
@@ -88,16 +115,39 @@ export default function MenuPage() {
           </p>
         </div>
 
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-4 max-w-4xl mx-auto">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by pizza name or ingredient..."
+            className="w-full h-11 rounded-xl border border-border bg-white/70 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
+            aria-label="Search pizzas"
+          />
+
+          <select
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+            className="h-11 rounded-xl border border-border bg-white/70 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
+            aria-label="Sort menu"
+          >
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
+          </select>
+        </div>
+
         {/* Category Filter */}
         <div className="mb-12">
           <div className="flex flex-wrap justify-center gap-3">
             {categories.map((category) => (
               <Button
                 key={category.id}
-                onClick={() => filterByCategory(category.id)}
+                onClick={() => setActiveCategory(category.id)}
                 variant={activeCategory === category.id ? "default" : "outline"}
                 size="lg"
-                className="min-w-30"
+                className="min-w-30 rounded-full"
               >
                 <span className="mr-2">{category.icon}</span>
                 {category.name}
@@ -120,25 +170,41 @@ export default function MenuPage() {
         </div>
 
         {/* Menu Grid */}
-        {filteredProducts.length > 0 ? (
+        {!hasFetchError && filteredProducts.length > 0 ? (
           <Menu items={filteredProducts} />
+        ) : hasFetchError ? (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+              Could not load menu right now
+            </h3>
+            <p className="text-gray-600 mb-6">Please try again in a moment.</p>
+            <Button onClick={fetchProducts} className="rounded-full">
+              Retry
+            </Button>
+          </div>
         ) : (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">😔</div>
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-              No pizzas found
+              No pizzas match your filters
             </h3>
             <p className="text-gray-600 mb-6">
-              Try selecting a different category
+              Try another category or clear your search text
             </p>
-            <Button onClick={() => filterByCategory("ALL")}>
-              View All Pizzas
+            <Button
+              onClick={() => {
+                setSearchTerm("");
+                setActiveCategory("ALL");
+              }}
+            >
+              Reset Filters
             </Button>
           </div>
         )}
 
         {/* Info Section */}
-        <div className="mt-16 bg-gray-50 rounded-lg p-8">
+        <div className="mt-16 bg-white/75 backdrop-blur rounded-2xl p-8 border border-border/60 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-3xl mb-3">🚀</div>

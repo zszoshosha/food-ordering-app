@@ -29,7 +29,8 @@ export const getCartItemQuantity = (id: string, cart: CartItem[]) => {
  */
 export const getCartItemUnitPrice = (item: CartItem) => {
   const extrasTotal =
-    item.extras?.reduce((sum, extra) => sum + Number(extra.price), 0) || 0;
+    item.extras?.reduce((sum, extra) => sum + Number(extra?.price || 0), 0) ||
+    0;
   const base = Number(item.basePrice || 0);
   const sizePrice = Number(item.size?.price || 0);
   return base + sizePrice + extrasTotal;

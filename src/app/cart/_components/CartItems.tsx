@@ -98,7 +98,7 @@ const CartItems = () => {
             className="flex gap-4 border-b pb-4 last:border-b-0"
           >
             {/* Product Image */}
-            <div className="relative w-24 h-24 flex-shrink-0">
+            <div className="relative w-24 h-24 shrink-0">
               <Image
                 src={item.image}
                 alt={item.name}
@@ -124,11 +124,14 @@ const CartItems = () => {
                 <div className="text-sm text-gray-600 mt-1">
                   <span className="font-medium">Extras:</span>
                   <ul className="ml-4 list-disc">
-                    {item.extras.map((extra, idx) => (
-                      <li key={idx}>
-                        {extra.name} ({formatCurrency(extra.price)})
-                      </li>
-                    ))}
+                    {item.extras.map((extra, idx) =>
+                      extra ? (
+                        <li key={idx}>
+                          {extra.name} (
+                          {formatCurrency(Number(extra.price || 0))})
+                        </li>
+                      ) : null,
+                    )}
                   </ul>
                 </div>
               )}

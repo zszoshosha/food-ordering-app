@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "../../lib/prisma";
+import { db, withPrismaRetry } from "../../lib/prisma";
 import { createOrderByDb } from "../db/order";
 import {
   checkoutSchema,
@@ -61,17 +61,19 @@ export const createOrder = async (userId: string, payload: unknown) => {
   const data = parsed.data;
   const productIds = [...new Set(data.items.map((item) => item.productId))];
 
-  const products = await db.product.findMany({
-    where: {
-      id: {
-        in: productIds,
+  const products = await withPrismaRetry(() =>
+    db.product.findMany({
+      where: {
+        id: {
+          in: productIds,
+        },
       },
-    },
-    include: {
-      sizes: true,
-      extras: true,
-    },
-  });
+      include: {
+        sizes: true,
+        extras: true,
+      },
+    }),
+  );
 
   if (products.length !== productIds.length) {
     return {

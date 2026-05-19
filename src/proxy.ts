@@ -27,7 +27,12 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
-const protectedRoutes = new Set([Routes.PROFILE, Routes.ADMIN, "pay"]);
+const protectedRoutes = new Set([
+  Routes.PROFILE,
+  Routes.ADMIN,
+  Routes.DELIVERY,
+  "pay",
+]);
 const authRoutes = new Set([
   `${Routes.AUTH}/${Pages.LOGIN}`,
   `${Routes.AUTH}/${Pages.REGISTER}`,
@@ -92,6 +97,12 @@ export default async function proxy(request: NextRequest) {
       );
     }
 
+    if (token?.role === UserRole.DELIVERY) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/${Routes.DELIVERY}`, request.url),
+      );
+    }
+
     if (token) {
       return NextResponse.redirect(
         new URL(`/${locale}/${Routes.PROFILE}`, request.url),
@@ -108,6 +119,17 @@ export default async function proxy(request: NextRequest) {
   if (token) {
     // Signed-in regular users cannot access admin pages.
     if (routeSegment === Routes.ADMIN && token.role !== UserRole.ADMIN) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/${Routes.PROFILE}`, request.url),
+      );
+    }
+
+    // Only delivery and admin users can access delivery operations pages.
+    if (
+      routeSegment === Routes.DELIVERY &&
+      token.role !== UserRole.DELIVERY &&
+      token.role !== UserRole.ADMIN
+    ) {
       return NextResponse.redirect(
         new URL(`/${locale}/${Routes.PROFILE}`, request.url),
       );

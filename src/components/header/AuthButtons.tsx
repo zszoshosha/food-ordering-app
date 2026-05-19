@@ -55,6 +55,15 @@ const AuthButtons = ({
           {t("admin")}
         </Link>
       )}
+      {session.user.role === "DELIVERY" && (
+        <Link
+          href={Routes.DELIVERY}
+          onClick={onNavigate}
+          className={`${buttonVariants({ size: "lg", variant: "outline" })} rounded-full`}
+        >
+          {t("delivery")}
+        </Link>
+      )}
       <Link
         href={Routes.PROFILE}
         onClick={onNavigate}

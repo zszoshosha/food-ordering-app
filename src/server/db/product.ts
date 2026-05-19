@@ -1,5 +1,6 @@
 import { Cache } from "@/lib/cache";
-import { db } from "@/lib/prisma";
+import { db, withPrismaRetry } from "@/lib/prisma";
+import { ProductWithRelations } from "@/types/Product";
 
 /**
  * Fetches all products with their sizes and extras from the database.
@@ -8,11 +9,18 @@ import { db } from "@/lib/prisma";
  * @returns {Promise<ProductWithRelations[]>} All products with related sizes and extras.
  */
 export const getProductsByDb = Cache(
-  () => {
-    const products = db.product.findMany({
-      include: { sizes: true, extras: true },
-    });
-    return products;
+  async () => {
+    try {
+      return await withPrismaRetry(() =>
+        db.product.findMany({
+          include: { sizes: true, extras: true },
+        }),
+      );
+    } catch (error) {
+      // Keep storefront rendering during temporary database outages.
+      console.error("Failed to load products from database:", error);
+      return [] as ProductWithRelations[];
+    }
   },
   ["best-sellers"],
   { revalidate: 3600 },

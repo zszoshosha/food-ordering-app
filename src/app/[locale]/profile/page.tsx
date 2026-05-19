@@ -1,4 +1,5 @@
 import EditUserForm from "@/components/profile/edit-user-form";
+import OrderHistoryPanel from "@/components/profile/OrderHistoryPanel";
 import { UserRole } from "@/constants/enums";
 import { requireAuth } from "@/lib/requireAuth";
 import { getTranslations } from "next-intl/server";
@@ -19,6 +20,10 @@ const ProfilePage = async ({
 
   if (session.user.role === UserRole.ADMIN) {
     redirect(`/${locale}/admin`);
+  }
+
+  if (session.user.role === UserRole.DELIVERY) {
+    redirect(`/${locale}/delivery`);
   }
 
   return (
@@ -120,6 +125,8 @@ const ProfilePage = async ({
             </div>
           </div>
         </div>
+
+        <OrderHistoryPanel locale={locale} />
       </div>
     </main>
   );

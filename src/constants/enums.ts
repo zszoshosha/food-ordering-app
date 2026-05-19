@@ -22,6 +22,7 @@ export enum Routes {
   CART = "cart",
   PROFILE = "profile",
   ADMIN = "admin",
+  DELIVERY = "delivery",
 }
 
 export enum Pages {
@@ -111,4 +112,5 @@ export enum Environments {
 export enum UserRole {
   USER = "USER",
   ADMIN = "ADMIN",
+  DELIVERY = "DELIVERY",
 }

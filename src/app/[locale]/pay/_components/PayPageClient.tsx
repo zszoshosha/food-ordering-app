@@ -28,6 +28,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
   const subtotal = useMemo(() => getTotal(items), [items]);
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
+  const estimatedRange = t("etaWindow");
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -100,6 +101,13 @@ const PayPageClient = ({ locale }: { locale: string }) => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold mb-1">{t("title")}</h1>
           <p className="text-muted-foreground mb-6">{t("personalInfo")}</p>
+
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <p className="text-sm font-medium text-primary">{t("etaTitle")}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("etaText", { range: estimatedRange })}
+            </p>
+          </div>
 
           <form className="grid gap-5" onSubmit={onSubmit} id="checkout-form">
             <div className="grid gap-2">
@@ -201,6 +209,7 @@ const PayPageClient = ({ locale }: { locale: string }) => {
           )}
 
           <div className="mt-6 space-y-3">
+            <p className="text-sm text-muted-foreground">{t("trackHint")}</p>
             <Button variant="outline" className="w-full" asChild>
               <Link href={`/${locale}/cart`}>{tCart("continueShopping")}</Link>
             </Button>

@@ -11,10 +11,10 @@ import LanguageSwitcher from "../language-switcher";
  */
 const Header = () => {
   return (
-    <header className="py-4 md:py-6">
-      <div className="container flex items-center justify-between">
+    <header className="sticky top-0 z-30 py-4 md:py-6 backdrop-blur-xl bg-background/80 border-b border-border/60">
+      <div className="container flex items-center justify-between gap-4">
         <Link
-          className="text-primary font-semibold text-2xl"
+          className="text-primary font-display font-semibold text-2xl tracking-tight"
           href={Routes.ROOT}
         >
           🍕 pizza

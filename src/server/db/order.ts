@@ -1,4 +1,4 @@
-import { db } from "@/lib/prisma";
+import { db, withPrismaRetry } from "@/lib/prisma";
 
 type CreateOrderInput = {
   userId: string;
@@ -31,15 +31,17 @@ export const createOrderByDb = async (payload: CreateOrderInput) => {
  * Returns all orders for a user ordered by newest first.
  */
 export const getUserOrdersByDb = async (userId: string) => {
-  return db.order.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      orderItems: {
-        include: {
-          product: true,
+  return withPrismaRetry(() =>
+    db.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        orderItems: {
+          include: {
+            product: true,
+          },
         },
       },
-    },
-  });
+    }),
+  );
 };

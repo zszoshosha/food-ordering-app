@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 /**
  * MainHeading component displays a section title with a subtitle.
@@ -6,13 +6,17 @@ import React from 'react'
  * @param {string} title - The main title text.
  * @param {string} subTitle - The subtitle text.
  */
-function MainHeading ({title , subTitle}:{title:string;subTitle:string})  {
+function MainHeading({ title, subTitle }: { title: string; subTitle: string }) {
   return (
-    <>
-     <span className='uppercase text-accent font-semibold leading-4 text-sm md:text-base'>{subTitle}</span> 
-     <h2 className='text-primary font-bold text-3xl md:text-4xl lg:text-5xl italic'>{title}</h2>
-    </>
-  )
+    <div className="space-y-3 text-center">
+      <span className="inline-block uppercase tracking-[0.22em] text-accent font-semibold leading-4 text-xs md:text-sm rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5">
+        {subTitle}
+      </span>
+      <h2 className="font-display text-primary font-semibold text-3xl md:text-4xl lg:text-5xl leading-tight">
+        {title}
+      </h2>
+    </div>
+  );
 }
 
-export default MainHeading
+export default MainHeading;

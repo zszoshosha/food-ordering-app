@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Manrope, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { Sonner } from "@/components/ui/sonner";
 
 /**
- * Roboto font configuration for the application.
+ * Body font configuration for the application.
  */
-const roboto = Roboto({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  variable: "--font-body",
+  weight: ["400", "500", "600", "700", "800"],
+  preload: true,
+});
+
+/**
+ * Display font configuration used by headings and hero text.
+ */
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "600", "700"],
   preload: true,
 });
 
@@ -39,7 +50,9 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" dir="ltr">
-      <body className={roboto.className}>
+      <body
+        className={`${manrope.variable} ${playfairDisplay.variable} ${manrope.className}`}
+      >
         {/* ReduxProvider wraps everything to enable global state (cart, etc.) */}
         <ReduxProvider>
           {children}

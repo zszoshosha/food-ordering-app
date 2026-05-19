@@ -3,7 +3,7 @@ import { authOptions } from "@/server/auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
-type AppRole = "USER" | "ADMIN";
+type AppRole = "USER" | "ADMIN" | "DELIVERY";
 
 /**
  * Ensures the current request has an authenticated session.

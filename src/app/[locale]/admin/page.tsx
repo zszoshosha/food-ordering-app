@@ -1,4 +1,5 @@
 import EditUserForm from "@/components/profile/edit-user-form";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 import { requireAuth } from "@/lib/requireAuth";
 import { getTranslations } from "next-intl/server";
 import {
@@ -138,6 +139,8 @@ const AdminPage = async ({
             </div>
           </section>
         </div>
+
+        <AdminDashboard locale={locale} />
       </div>
     </main>
   );

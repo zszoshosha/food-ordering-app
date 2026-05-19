@@ -38,21 +38,27 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
   const dispatch = useAppDispatch();
   const defaultSize =
     cart.find((cartItem) => cartItem.id === item.id)?.size ||
-    item.sizes.find((size) => size.name.toUpperCase() === ProductSize.SMALL);
-  const [selectedSize, setSelectedSize] = useState<Size>(defaultSize!);
+    item.sizes.find((size) => size.name.toUpperCase() === ProductSize.SMALL) ||
+    item.sizes[0] ||
+    null;
+  const [selectedSize, setSelectedSize] = useState<Size | null>(defaultSize);
   const itemQuantity = getCartItemQuantity(item.id, cart);
   const totalPrice = useMemo(() => {
     const extrasTotal = selectedExtra.reduce(
-      (sum, extra) => sum + extra.price,
+      (sum, extra) => sum + Number(extra?.price || 0),
       0,
     );
-    return item.basePrice + selectedSize.price + extrasTotal;
-  }, [item.basePrice, selectedSize.price, selectedExtra]);
+    return (
+      Number(item.basePrice || 0) +
+      Number(selectedSize?.price || 0) +
+      extrasTotal
+    );
+  }, [item.basePrice, selectedSize?.price, selectedExtra]);
 
   const handleAddToCart = () => {
     dispatch(
       addCartItem({
-        size: selectedSize,
+        size: selectedSize ?? undefined,
         extras: selectedExtra,
         basePrice: item.basePrice,
         name: item.name,
@@ -87,12 +93,18 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
           <div className="space-y-10">
             <div className="space-y-4 text-center">
               <Label htmlFor="pick-size">pick your size</Label>
-              <PickSize
-                sizes={item.sizes}
-                item={item}
-                selectedSize={selectedSize}
-                setSelectedSize={setSelectedSize}
-              />
+              {item.sizes.length > 0 ? (
+                <PickSize
+                  sizes={item.sizes}
+                  item={item}
+                  selectedSize={selectedSize}
+                  setSelectedSize={setSelectedSize}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No size options available.
+                </p>
+              )}
             </div>
             <div className="space-y-4 text-center">
               <Label htmlFor="add-extras">Any Extras?</Label>
@@ -139,13 +151,13 @@ function PickSize({
 }: {
   sizes: Size[];
   item: ProductWithRelations;
-  selectedSize: Size;
-  setSelectedSize: React.Dispatch<React.SetStateAction<Size>>;
+  selectedSize: Size | null;
+  setSelectedSize: React.Dispatch<React.SetStateAction<Size | null>>;
 }) {
   return (
     <RadioGroup
       aria-labelledby="pick-size"
-      value={selectedSize.id}
+      value={selectedSize?.id || ""}
       onValueChange={(value: string) => {
         const next = sizes.find((s) => s.id === value);
         if (next) {
@@ -206,7 +218,7 @@ function Extras({
         className="text-sm text-accent font-medium leading-none peer-disabled:cursor-none"
       >
         {extra.name}
-        {formatCurrency(extra.price)}
+        {formatCurrency(Number(extra.price || 0))}
       </Label>
     </div>
   ));
@@ -223,7 +235,7 @@ const ChooseQuantity = ({
   itemQuantity,
 }: {
   item: ProductWithRelations;
-  selectedSize: Size;
+  selectedSize: Size | null;
   selectedExtra: Extra[];
   totalPrice: number;
   itemQuantity: number;
@@ -233,7 +245,7 @@ const ChooseQuantity = ({
   const handleIncrease = () => {
     dispatch(
       addCartItem({
-        size: selectedSize,
+        size: selectedSize ?? undefined,
         extras: selectedExtra,
         basePrice: item.basePrice,
         name: item.name,

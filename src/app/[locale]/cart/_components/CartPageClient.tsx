@@ -1,7 +1,7 @@
 "use client";
 
-import CartItems from "../../cart/_components/CartItems";
-import CheckOut from "../../cart/_components/CheckOut";
+import CartItems from "@/app/cart/_components/CartItems";
+import CheckOut from "@/app/cart/_components/CheckOut";
 import { useTranslations } from "next-intl";
 
 /**

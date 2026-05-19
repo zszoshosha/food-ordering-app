@@ -2,7 +2,7 @@
 
 import { Locale } from "@/i18n/request";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
-import { db } from "@/lib/prisma";
+import { db, withPrismaRetry } from "@/lib/prisma";
 import getTrans from "@/lib/translation";
 import { loginSchema, signupSchema } from "@/validation/auth";
 import bcrypt from "bcryptjs";
@@ -17,7 +17,7 @@ export type SignupState = {
     id: string;
     name: string | null;
     email: string;
-    role: "USER" | "ADMIN";
+    role: "USER" | "ADMIN" | "DELIVERY";
   };
 };
 
@@ -34,9 +34,11 @@ export const login = async (
   }
 
   try {
-    const user = await db.user.findUnique({
-      where: { email: result.data.email },
-    });
+    const user = await withPrismaRetry(() =>
+      db.user.findUnique({
+        where: { email: result.data.email },
+      }),
+    );
     if (!user) {
       return {
         status: "400",
@@ -91,9 +93,11 @@ export const signup = async (
     };
   }
   try {
-    const existingUser = await db.user.findUnique({
-      where: { email: result.data.email },
-    });
+    const existingUser = await withPrismaRetry(() =>
+      db.user.findUnique({
+        where: { email: result.data.email },
+      }),
+    );
     if (existingUser) {
       return {
         status: 409,

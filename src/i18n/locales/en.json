@@ -9,7 +9,8 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "profile": "Profile",
-    "admin": "Admin"
+    "admin": "Admin",
+    "delivery": "Delivery"
   },
   "hero": {
     "title": "Welcome to Pizza Palace",
@@ -39,6 +40,11 @@
     "addToCart": "Add to Cart",
     "categories": {
       "all": "All",
+      "classic": "Classic",
+      "specialty": "Specialty",
+      "vegetarian": "Vegetarian",
+      "meat": "Meat Lovers",
+      "seafood": "Seafood",
       "pizza": "Pizza",
       "pasta": "Pasta",
       "salads": "Salads",
@@ -46,7 +52,18 @@
       "drinks": "Drinks"
     },
     "loading": "Loading menu...",
-    "error": "Failed to load menu"
+    "error": "Failed to load menu",
+    "retry": "Retry",
+    "empty": "No menu items match your filters.",
+    "searchPlaceholder": "Search by pizza name or ingredient...",
+    "searchAria": "Search menu items",
+    "sortAria": "Sort menu items",
+    "sort": {
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "priceAsc": "Price (Low to High)",
+      "priceDesc": "Price (High to Low)"
+    }
   },
   "cart": {
     "title": "Your Cart",
@@ -80,7 +97,11 @@
     "placeOrder": "Place Order",
     "processing": "Processing...",
     "orderSuccess": "Order placed successfully!",
-    "orderError": "Failed to place order. Please try again."
+    "orderError": "Failed to place order. Please try again.",
+    "etaTitle": "Estimated delivery",
+    "etaText": "Your order usually arrives within {range} after confirmation.",
+    "etaWindow": "30-45 minutes",
+    "trackHint": "After ordering, you can track status updates from your profile timeline."
   },
   "contact": {
     "title": "Contact Us",
@@ -104,6 +125,48 @@
   "bestsellers": {
     "title": "Our Bestsellers",
     "subtitle": "Most Loved by Our Customers"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Review your account details and preferences.",
+    "helperText": "Some account editing features will be available soon.",
+    "orders": {
+      "title": "Order History",
+      "subtitle": "Track your recent orders and reorder in one click.",
+      "loading": "Loading your orders...",
+      "empty": "You have no orders yet.",
+      "loadError": "Failed to load your orders.",
+      "items": "items",
+      "reorder": "Reorder",
+      "reorderSuccess": "Items added to cart.",
+      "etaPrefix": "Estimated arrival:",
+      "status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "delivery": "Out for delivery",
+        "delivered": "Delivered"
+      }
+    },
+    "form": {
+      "name": {
+        "label": "Name"
+      },
+      "email": {
+        "label": "Email"
+      }
+    }
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Track the parts of the store you manage from one place.",
+    "helperText": "Use this area to review account access and core management sections.",
+    "tabs": {
+      "profile": "Profile",
+      "categories": "Categories",
+      "menuItems": "Menu Items",
+      "users": "Users",
+      "orders": "Orders"
+    }
   },
   "footer": {
     "description": "Authentic Italian pizza delivered to your door. Made with love and the finest ingredients.",
