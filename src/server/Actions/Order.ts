@@ -1,12 +1,20 @@
 "use server";
 
 import { db, withPrismaRetry } from "../../lib/prisma";
-import { createOrderByDb } from "../db/order";
+import { createOrderByDb, getUserOrdersByDb } from "../db/order";
+import {
+  ActionResponse,
+  actionError,
+  actionSuccess,
+} from "../../types/action-response";
 import {
   checkoutSchema,
   type CheckoutInput,
   type CheckoutItemInput,
 } from "../../validation/checkout";
+import { z } from "zod";
+
+const userIdSchema = z.string().cuid();
 
 const buildAddress = (payload: CheckoutInput) => {
   const parts = [
@@ -47,15 +55,27 @@ const calculateLineUnitPrice = (
   return Number(product.basePrice) + Number(sizePrice) + extrasPrice;
 };
 
-export const createOrder = async (userId: string, payload: unknown) => {
+export const createOrder = async (
+  userId: string,
+  payload: unknown,
+): Promise<
+  ActionResponse<{
+    id: string;
+    total: number;
+    createdAt: Date;
+  }>
+> => {
+  const parsedUserId = userIdSchema.safeParse(userId);
+  if (!parsedUserId.success) {
+    return actionError("Invalid user id.");
+  }
+
   const parsed = checkoutSchema.safeParse(payload);
   if (!parsed.success) {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "Invalid checkout payload.",
-      details: parsed.error.flatten().fieldErrors,
-    };
+    return actionError(
+      "Invalid checkout payload.",
+      parsed.error.flatten().fieldErrors,
+    );
   }
 
   const data = parsed.data;
@@ -76,11 +96,7 @@ export const createOrder = async (userId: string, payload: unknown) => {
   );
 
   if (products.length !== productIds.length) {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "One or more cart items are no longer available.",
-    };
+    return actionError("One or more cart items are no longer available.");
   }
 
   try {
@@ -107,35 +123,42 @@ export const createOrder = async (userId: string, payload: unknown) => {
     const total = Number((subtotal + tax).toFixed(2));
 
     if (Math.abs(total - data.total) > 0.01) {
-      return {
-        ok: false as const,
-        status: 400,
-        error: "Cart total changed. Please review your cart and try again.",
-      };
+      return actionError(
+        "Cart total changed. Please review your cart and try again.",
+      );
     }
 
     const createdOrder = await createOrderByDb({
-      userId,
+      userId: parsedUserId.data,
       address: buildAddress(data),
       total,
       orderItems: pricedItems,
     });
 
-    return {
-      ok: true as const,
-      status: 201,
-      order: {
-        id: createdOrder.id,
-        total: createdOrder.total,
-        createdAt: createdOrder.createdAt,
-      },
-    };
+    return actionSuccess({
+      id: createdOrder.id,
+      total: createdOrder.total,
+      createdAt: createdOrder.createdAt,
+    });
   } catch (error) {
     console.error("Create order failed:", error);
-    return {
-      ok: false as const,
-      status: 500,
-      error: "Failed to create order. Please try again.",
-    };
+    return actionError("Failed to create order. Please try again.");
+  }
+};
+
+export const getUserOrders = async (
+  userId: string,
+): Promise<ActionResponse<Awaited<ReturnType<typeof getUserOrdersByDb>>>> => {
+  const parsedUserId = userIdSchema.safeParse(userId);
+  if (!parsedUserId.success) {
+    return actionError("Invalid user id.");
+  }
+
+  try {
+    const orders = await getUserOrdersByDb(parsedUserId.data);
+
+    return actionSuccess(orders);
+  } catch {
+    return actionError("Failed to fetch orders.");
   }
 };

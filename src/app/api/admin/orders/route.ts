@@ -1,5 +1,20 @@
-import { getAdminOrders, updateAdminOrderStatus } from "@/server/Actions/Admin";
+import {
+  getAdminOrders,
+  updateAdminOrderStatus,
+} from "../../../../server/Actions/Admin";
 import { NextRequest, NextResponse } from "next/server";
+
+const getErrorStatus = (
+  error: string,
+  validationErrors?: Record<string, string[]>,
+) => {
+  if (error === "Unauthorized") return 401;
+  if (validationErrors) return 400;
+  if (/illegal order status transition/i.test(error)) return 409;
+  if (/not found/i.test(error)) return 404;
+  if (/failed/i.test(error)) return 500;
+  return 400;
+};
 
 /**
  * Returns paginated orders for admin management.
@@ -20,14 +35,16 @@ export async function GET(req: Request) {
 
     const result = await getAdminOrders({ page, pageSize, search, status });
 
-    return NextResponse.json(result);
-  } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
+    return NextResponse.json(result);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch orders." },
+      { success: false, error: "Failed to fetch orders." },
       { status: 500 },
     );
   }
@@ -42,28 +59,23 @@ export async function PATCH(req: Request) {
 
     if (!body.orderId || typeof body.status !== "number") {
       return NextResponse.json(
-        { error: "Invalid request body." },
+        { success: false, error: "Invalid request body." },
         { status: 400 },
       );
     }
 
     const result = await updateAdminOrderStatus(body.orderId, body.status);
 
-    if (!result.ok) {
-      return NextResponse.json(
-        { error: "Invalid order status payload.", details: result.errors },
-        { status: result.status },
-      );
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
-    return NextResponse.json(result.item, { status: result.status });
+    return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     return NextResponse.json(
-      { error: "Failed to update order status." },
+      { success: false, error: "Failed to update order status." },
       { status: 500 },
     );
   }

@@ -1,21 +1,22 @@
-import { getAdminOverview } from "@/server/Actions/Admin";
+import { getAdminOverview } from "../../../../server/Actions/Admin";
 import { NextResponse } from "next/server";
 
 /**
  * Returns aggregate owner KPIs for the admin dashboard.
  */
 export async function GET() {
-  try {
-    const overview = await getAdminOverview();
-    return NextResponse.json(overview);
-  } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const result = await getAdminOverview();
 
-    return NextResponse.json(
-      { error: "Failed to load admin overview." },
-      { status: 500 },
-    );
+  if (!result.success) {
+    const status =
+      result.error === "Unauthorized"
+        ? 401
+        : /failed/i.test(result.error)
+          ? 500
+          : 400;
+
+    return NextResponse.json(result, { status });
   }
+
+  return NextResponse.json(result);
 }

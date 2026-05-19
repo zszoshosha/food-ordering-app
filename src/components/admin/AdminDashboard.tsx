@@ -12,6 +12,7 @@ import {
   AdminUserListItem,
   PaginatedResult,
 } from "@/types/admin";
+import { ActionResponse } from "@/types/action-response";
 import { ProductWithRelations } from "@/types/Product";
 import { adminProductSchema } from "@/validation/admin";
 import { useEffect, useMemo, useState } from "react";
@@ -130,14 +131,22 @@ const getAdminFetchErrorMessage = async (
   response: Response,
   fallback: string,
 ) => {
-  if (response.status === 401) {
-    return ADMIN_AUTH_ERROR_MESSAGE;
-  }
-
   try {
-    const payload = (await response.json()) as { error?: string };
-    return payload.error ?? fallback;
+    const payload = (await response.json()) as ActionResponse<unknown>;
+    if (!payload.success) {
+      if (payload.error === "Unauthorized") {
+        return ADMIN_AUTH_ERROR_MESSAGE;
+      }
+
+      return payload.error || fallback;
+    }
+
+    return fallback;
   } catch {
+    if (response.status === 401) {
+      return ADMIN_AUTH_ERROR_MESSAGE;
+    }
+
     return fallback;
   }
 };
@@ -271,8 +280,14 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         );
       }
 
-      const data = (await response.json()) as { items: ProductWithRelations[] };
-      setProducts(data.items);
+      const result = (await response.json()) as ActionResponse<
+        ProductWithRelations[]
+      >;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      setProducts(result.data);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load products.";
@@ -298,8 +313,12 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         );
       }
 
-      const data = (await response.json()) as AdminOverview;
-      setOverview(data);
+      const result = (await response.json()) as ActionResponse<AdminOverview>;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      setOverview(result.data);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load overview.";
@@ -337,9 +356,14 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         );
       }
 
-      const data =
-        (await response.json()) as PaginatedResult<AdminUserListItem>;
-      setUsersData(data);
+      const result = (await response.json()) as ActionResponse<
+        PaginatedResult<AdminUserListItem>
+      >;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      setUsersData(result.data);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load users.";
@@ -377,9 +401,14 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         );
       }
 
-      const data =
-        (await response.json()) as PaginatedResult<AdminOrderListItem>;
-      setOrdersData(data);
+      const result = (await response.json()) as ActionResponse<
+        PaginatedResult<AdminOrderListItem>
+      >;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      setOrdersData(result.data);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load orders.";
@@ -512,15 +541,13 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         }),
       });
 
-      const result = (await response.json()) as {
-        error?: string;
-        fieldErrors?: Partial<Record<ProductFieldName, string[]>>;
-      };
+      const result =
+        (await response.json()) as ActionResponse<ProductWithRelations>;
 
       if (!response.ok) {
-        if (result.fieldErrors) {
+        if (!result.success && result.validationErrors) {
           const nextErrors = Object.entries(
-            result.fieldErrors,
+            result.validationErrors,
           ).reduce<ProductFormErrors>((accumulator, [fieldName, messages]) => {
             if (messages?.length) {
               accumulator[fieldName as ProductFieldName] = messages[0];
@@ -531,12 +558,16 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
 
           setProductFormErrors(nextErrors);
           setProductFormError(
-            result.error ?? "Please fix the highlighted fields.",
+            result.error || "Please fix the highlighted fields.",
           );
           return;
         }
 
-        throw new Error(result.error ?? "Failed to save product.");
+        if (!result.success) {
+          throw new Error(result.error || "Failed to save product.");
+        }
+
+        throw new Error("Failed to save product.");
       }
 
       setIsProductModalOpen(false);
@@ -563,10 +594,16 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         method: "DELETE",
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as ActionResponse<{
+        deleted: true;
+      }>;
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to delete product.");
+        if (!payload.success) {
+          throw new Error(payload.error || "Failed to delete product.");
+        }
+
+        throw new Error("Failed to delete product.");
       }
 
       setProducts((prev) => prev.filter((item) => item.id !== productId));
@@ -603,26 +640,32 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
         body: JSON.stringify({ orderId, status }),
       });
 
-      const payload = (await response.json()) as {
-        error?: string;
-        status?: AdminOrderStatus;
-        id?: string;
-      };
+      const payload = (await response.json()) as ActionResponse<{
+        id: string;
+        status: AdminOrderStatus;
+        updatedAt: string;
+      }>;
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to update order status.");
+        if (!payload.success) {
+          throw new Error(payload.error || "Failed to update order status.");
+        }
+
+        throw new Error("Failed to update order status.");
       }
 
       if (
-        payload.id &&
-        typeof payload.status === "number" &&
-        payload.status in AdminOrderStatus
+        payload.success &&
+        typeof payload.data.status === "number" &&
+        payload.data.status in AdminOrderStatus
       ) {
-        const nextStatus = payload.status as AdminOrderStatus;
+        const nextStatus = payload.data.status as AdminOrderStatus;
         setOrdersData((prev) => ({
           ...prev,
           items: prev.items.map((item) =>
-            item.id === payload.id ? { ...item, status: nextStatus } : item,
+            item.id === payload.data.id
+              ? { ...item, status: nextStatus }
+              : item,
           ),
         }));
       }

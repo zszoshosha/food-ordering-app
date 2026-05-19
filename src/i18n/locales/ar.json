@@ -142,6 +142,7 @@
       "etaPrefix": "الوصول المتوقع:",
       "status": {
         "pending": "قيد الانتظار",
+        "paid": "تم الدفع",
         "preparing": "قيد التحضير",
         "delivery": "خرج للتوصيل",
         "delivered": "تم التسليم"

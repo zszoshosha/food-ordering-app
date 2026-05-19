@@ -142,6 +142,7 @@
       "etaPrefix": "Estimated arrival:",
       "status": {
         "pending": "Pending",
+        "paid": "Paid",
         "preparing": "Preparing",
         "delivery": "Out for delivery",
         "delivered": "Delivered"

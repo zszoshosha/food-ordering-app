@@ -1,43 +1,33 @@
 import { Extra, Size } from "@prisma/client";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-/**
- * Cart Item Type Definition
- * Represents a single product in the shopping cart with all its customizations
- */
 export type CartItem = {
-  name: string; // Product name
-  id: string; // Product ID
-  image: string; // Product image URL
-  basePrice: number; // Base price of the product
-  quantity?: number; // Quantity of this item in cart (default: 1)
-  size?: Size; // Optional selected size with price modifier
-  extras?: Extra[]; // Optional selected extras/toppings
+  name: string;
+  id: string;
+  image: string;
+  basePrice: number;
+  quantity?: number;
+  size?: Size;
+  extras?: Extra[];
 };
 
-/**
- * Cart State Type
- * Manages the collection of cart items
- */
 type CartState = {
   items: CartItem[];
 };
-/**
- * Initial state - starts with empty cart
- * Note: localStorage is synced from CartItems component on client-side only
- * This avoids hydration issues in Next.js SSR
- */
-const initialState: CartState = {
-  items: [],
+
+export type CartAction =
+  | { type: "cart/addCartItem"; payload: CartItem }
+  | { type: "cart/removeCartItem"; payload: { id: string } }
+  | { type: "cart/removeItemFromCart"; payload: { id: string } }
+  | { type: "cart/hydrateCart"; payload: CartItem[] }
+  | { type: "cart/clearCart"; payload?: undefined }
+  | { type: "cart/incrementQuantity"; payload: { id: string } };
+
+type CartStore = CartState & {
+  dispatch: (action: CartAction) => void;
 };
 
-/**
- * Generate a unique key for a cart item based on its id, size, and extras
- * This ensures duplicate items with different customizations are treated as separate items
- * @param item - The cart item to generate a key for
- * @returns A unique string key combining product id + size + extras
- */
 const getCartItemKey = (item: CartItem) => {
   const sizeId = item.size?.id ?? "no-size";
   const extrasKey =
@@ -45,79 +35,144 @@ const getCartItemKey = (item: CartItem) => {
       ?.map((e) => e.id)
       .sort()
       .join("|") ?? "no-extras";
+
   return `${item.id}-${sizeId}-${extrasKey}`;
 };
 
-export const cartSlice = createSlice({
-  name: "cart",
-  initialState,
-  reducers: {
-    /**
-     * Add item to cart or increment quantity if item with same customization exists
-     * Checks if the exact item (product + size + extras) already exists
-     * If yes: increments quantity by 1
-     * If no: adds new item with quantity 1
-     */
-    addCartItem: (state, action: PayloadAction<CartItem>) => {
+const applyCartAction = (state: CartState, action: CartAction): CartState => {
+  switch (action.type) {
+    case "cart/addCartItem": {
       const incomingKey = getCartItemKey(action.payload);
       const existingItem = state.items.find(
         (item) => getCartItemKey(item) === incomingKey,
       );
+
       if (existingItem) {
-        existingItem.quantity = (existingItem.quantity || 0) + 1;
-      } else {
-        state.items.push({
-          ...action.payload,
-          quantity: action.payload.quantity ?? 1,
-        });
+        return {
+          ...state,
+          items: state.items.map((item) =>
+            getCartItemKey(item) === incomingKey
+              ? { ...item, quantity: (item.quantity || 0) + 1 }
+              : item,
+          ),
+        };
       }
-    },
-    /**
-     * Decrease quantity of item by 1
-     * If quantity reaches 0 or below, removes the item from cart
-     */
-    removeCartItem: (state, action: PayloadAction<{ id: string }>) => {
-      const item = state.items.find((item) => item.id === action.payload.id);
+
+      return {
+        ...state,
+        items: [
+          ...state.items,
+          {
+            ...action.payload,
+            quantity: action.payload.quantity ?? 1,
+          },
+        ],
+      };
+    }
+
+    case "cart/removeCartItem": {
+      const item = state.items.find((entry) => entry.id === action.payload.id);
       if (item && item.quantity && item.quantity > 1) {
-        item.quantity -= 1;
-      } else {
-        state.items = state.items.filter(
-          (item) => item.id !== action.payload.id,
-        );
+        return {
+          ...state,
+          items: state.items.map((entry) =>
+            entry.id === action.payload.id
+              ? { ...entry, quantity: (entry.quantity || 1) - 1 }
+              : entry,
+          ),
+        };
       }
+
+      return {
+        ...state,
+        items: state.items.filter((entry) => entry.id !== action.payload.id),
+      };
+    }
+
+    case "cart/removeItemFromCart":
+      return {
+        ...state,
+        items: state.items.filter((entry) => entry.id !== action.payload.id),
+      };
+
+    case "cart/hydrateCart":
+      return {
+        ...state,
+        items: action.payload,
+      };
+
+    case "cart/clearCart":
+      return {
+        ...state,
+        items: [],
+      };
+
+    case "cart/incrementQuantity":
+      return {
+        ...state,
+        items: state.items.map((entry) =>
+          entry.id === action.payload.id
+            ? { ...entry, quantity: (entry.quantity || 0) + 1 }
+            : entry,
+        ),
+      };
+
+    default:
+      return state;
+  }
+};
+
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set) => ({
+      items: [],
+      dispatch: (action) => set((state) => applyCartAction(state, action)),
+    }),
+    {
+      name: "cart-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ items: state.items }),
     },
-    removeItemFromCart: (state, action: PayloadAction<{ id: string }>) => {
-      state.items = state.items.filter((item) => item.id !== action.payload.id);
-    },
-    /**
-     * Hydrate cart from localStorage on client-side.
-     * This action replaces the entire cart state with persisted items.
-     * Called once on mount in CartItems component to restore the cart
-     * after SSR hydration (avoids mismatch between server and client state).
-     */
-    hydrateCart: (state, action: PayloadAction<CartItem[]>) => {
-      state.items = action.payload;
-    },
-    clearCart: (state) => {
-      state.items = [];
-    },
-    incrementQuantity: (state, action: PayloadAction<{ id: string }>) => {
-      const item = state.items.find((i) => i.id === action.payload.id);
-      if (item) {
-        item.quantity! += 1;
-      }
-    },
-  },
+  ),
+);
+
+export const dispatchCartAction = (action: CartAction) => {
+  useCartStore.getState().dispatch(action);
+};
+
+export const addCartItem = (payload: CartItem): CartAction => ({
+  type: "cart/addCartItem",
+  payload,
 });
 
-export const {
-  addCartItem,
-  removeCartItem,
-  removeItemFromCart,
-  hydrateCart,
-  clearCart,
-  incrementQuantity,
-} = cartSlice.actions;
-export default cartSlice.reducer;
+export const removeCartItem = (payload: { id: string }): CartAction => ({
+  type: "cart/removeCartItem",
+  payload,
+});
+
+export const removeItemFromCart = (payload: { id: string }): CartAction => ({
+  type: "cart/removeItemFromCart",
+  payload,
+});
+
+export const hydrateCart = (payload: CartItem[]): CartAction => ({
+  type: "cart/hydrateCart",
+  payload,
+});
+
+export const clearCart = (): CartAction => ({
+  type: "cart/clearCart",
+});
+
+export const incrementQuantity = (payload: { id: string }): CartAction => ({
+  type: "cart/incrementQuantity",
+  payload,
+});
+
+export type RootState = {
+  cart: {
+    items: CartItem[];
+  };
+};
 
 export const selectCartItems = (state: RootState) => state.cart.items;

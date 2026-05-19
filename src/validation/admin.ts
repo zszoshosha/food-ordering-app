@@ -1,4 +1,9 @@
-import { Extraingredient, ProductCategory, ProductSize } from "@prisma/client";
+import {
+  Extraingredient,
+  ProductCategory,
+  ProductSize,
+  UserRole,
+} from "@prisma/client";
 import * as z from "zod";
 
 /**
@@ -52,7 +57,7 @@ export const adminProductSchema = z.object({
  */
 export const adminOrderStatusSchema = z.object({
   orderId: z.string().cuid(),
-  status: z.coerce.number().int().min(0).max(3),
+  status: z.coerce.number().int().min(0).max(4),
 });
 
 /**
@@ -62,4 +67,31 @@ export const adminPaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(5).max(100).default(10),
   search: z.string().trim().max(120).optional().default(""),
+});
+
+/**
+ * Validation for admin users list filters.
+ */
+export const adminUsersQuerySchema = adminPaginationSchema.extend({
+  role: z
+    .union([z.literal("ALL"), z.nativeEnum(UserRole)])
+    .optional()
+    .default("ALL"),
+});
+
+/**
+ * Validation for admin orders list filters.
+ */
+export const adminOrdersQuerySchema = adminPaginationSchema.extend({
+  status: z
+    .union([z.literal("ALL"), z.coerce.number().int().min(0).max(4)])
+    .optional()
+    .default("ALL"),
+});
+
+/**
+ * Validation for admin product id query params.
+ */
+export const adminProductIdSchema = z.object({
+  productId: z.string().cuid(),
 });

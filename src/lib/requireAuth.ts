@@ -17,7 +17,7 @@ export const requireAuth = async (locale: string, requiredRole?: AppRole) => {
   }
 
   if (requiredRole && session.user.role !== requiredRole) {
-    redirect(`/${locale}/${Routes.PROFILE}`);
+    redirect(`/${locale}/${Routes.UNAUTHORIZED}`);
   }
 
   return session;

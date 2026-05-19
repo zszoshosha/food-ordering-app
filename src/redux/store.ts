@@ -1,18 +1,6 @@
-import { configureStore } from "@reduxjs/toolkit";
-import cartReducer from "./features/cartSlice";
+import { CartAction, RootState } from "./features/cartSlice";
 
-/**
- * Redux store configuration.
- * Enables Redux DevTools in non-production environments.
- */
-export const store = configureStore({
-  reducer: {
-    cart: cartReducer,
-  },
-  devTools: process.env.NODE_ENV !== "production",
-});
+export type AppDispatch = (action: CartAction) => void;
+export type { RootState };
 
-/** Inferred dispatch type from the store. */
-export type AppDispatch = typeof store.dispatch;
-/** Inferred root state type from all reducers. */
-export type RootState = ReturnType<typeof store.getState>;
+export const store = {};

@@ -1,22 +1,42 @@
-import { createOrder } from "@/server/Actions/Order";
+import { createOrder, getUserOrders } from "@/server/Actions/Order";
 import { authOptions } from "@/server/auth";
-import { getUserOrdersByDb } from "@/server/db/order";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+
+const getErrorStatus = (
+  error: string,
+  validationErrors?: Record<string, string[]>,
+) => {
+  if (error === "Unauthorized") return 401;
+  if (validationErrors) return 400;
+  if (/not found/i.test(error)) return 404;
+  if (/failed/i.test(error)) return 500;
+  return 400;
+};
 
 export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   try {
-    const orders = await getUserOrdersByDb(session.user.id);
-    return NextResponse.json(orders);
+    const result = await getUserOrders(session.user.id);
+
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
+    }
+
+    return NextResponse.json(result);
   } catch {
     return NextResponse.json(
-      { error: "Failed to fetch orders" },
+      { success: false, error: "Failed to fetch orders" },
       { status: 500 },
     );
   }
@@ -26,27 +46,26 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   try {
     const payload = await req.json();
     const result = await createOrder(session.user.id, payload);
 
-    if (!result.ok) {
-      return NextResponse.json(
-        {
-          error: result.error,
-          details: "details" in result ? result.details : undefined,
-        },
-        { status: result.status },
-      );
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
-    return NextResponse.json(result.order, { status: result.status });
+    return NextResponse.json(result, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Failed to create order" },
+      { success: false, error: "Failed to create order" },
       { status: 500 },
     );
   }

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters";
+import { ActionResponse } from "@/types/action-response";
 import { addCartItem } from "@/redux/features/cartSlice";
 import { useAppDispatch } from "@/redux/hooks";
 import { ShoppingBag, Clock3, Truck } from "lucide-react";
@@ -28,7 +29,7 @@ type UserOrder = {
   }>;
 };
 
-const timelineSteps = [0, 1, 2, 3];
+const timelineSteps = [0, 1, 2, 3, 4];
 
 const getEstimatedDelivery = (createdAt: string) => {
   const base = new Date(createdAt).getTime();
@@ -46,9 +47,10 @@ const OrderHistoryPanel = ({ locale }: { locale: string }) => {
   const statusLabels = useMemo(
     () => ({
       0: t("orders.status.pending"),
-      1: t("orders.status.preparing"),
-      2: t("orders.status.delivery"),
-      3: t("orders.status.delivered"),
+      1: t("orders.status.paid"),
+      2: t("orders.status.preparing"),
+      3: t("orders.status.delivery"),
+      4: t("orders.status.delivered"),
     }),
     [t],
   );
@@ -57,9 +59,16 @@ const OrderHistoryPanel = ({ locale }: { locale: string }) => {
     const loadOrders = async () => {
       try {
         const response = await fetch("/api/orders", { cache: "no-store" });
-        if (!response.ok) throw new Error("Failed");
-        const data = (await response.json()) as UserOrder[];
-        setOrders(data);
+        const data = (await response.json()) as ActionResponse<UserOrder[]>;
+        if (!response.ok) {
+          throw new Error(!data.success ? data.error : "Failed");
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed");
+        }
+
+        setOrders(data.data);
       } catch {
         toast.error(t("orders.loadError"), {
           className: "bg-red-500 text-white",
@@ -117,7 +126,7 @@ const OrderHistoryPanel = ({ locale }: { locale: string }) => {
       ) : (
         <div className="space-y-5">
           {orders.map((order) => {
-            const activeStatus = Math.min(Math.max(order.status, 0), 3);
+            const activeStatus = Math.min(Math.max(order.status, 0), 4);
             return (
               <article
                 key={order.id}
@@ -137,7 +146,7 @@ const OrderHistoryPanel = ({ locale }: { locale: string }) => {
                       {formatCurrency(Number(order.total || 0))}
                     </p>
                     <p className="text-sm text-primary font-medium">
-                      {statusLabels[activeStatus as 0 | 1 | 2 | 3]}
+                      {statusLabels[activeStatus as 0 | 1 | 2 | 3 | 4]}
                     </p>
                   </div>
                 </div>
@@ -163,7 +172,7 @@ const OrderHistoryPanel = ({ locale }: { locale: string }) => {
                             : "bg-muted/40 border-border text-muted-foreground"
                         }`}
                       >
-                        {statusLabels[step as 0 | 1 | 2 | 3]}
+                        {statusLabels[step as 0 | 1 | 2 | 3 | 4]}
                       </li>
                     );
                   })}

@@ -3,26 +3,33 @@ import {
   deleteAdminProduct,
   getAdminProducts,
   updateAdminProduct,
-} from "@/server/Actions/Admin";
+} from "../../../../server/Actions/Admin";
 import { NextRequest, NextResponse } from "next/server";
+
+const getErrorStatus = (
+  error: string,
+  validationErrors?: Record<string, string[]>,
+) => {
+  if (error === "Unauthorized") return 401;
+  if (validationErrors) return 400;
+  if (/not found/i.test(error)) return 404;
+  if (/already exists|cannot be deleted|linked/i.test(error)) return 409;
+  if (/failed/i.test(error)) return 500;
+  return 400;
+};
 
 /**
  * Returns all products for admin management.
  */
 export async function GET() {
-  try {
-    const products = await getAdminProducts();
-    return NextResponse.json({ items: products });
-  } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch products." },
-      { status: 500 },
-    );
+  const result = await getAdminProducts();
+  if (!result.success) {
+    return NextResponse.json(result, {
+      status: getErrorStatus(result.error, result.validationErrors),
+    });
   }
+
+  return NextResponse.json(result);
 }
 
 /**
@@ -39,24 +46,16 @@ export async function POST(req: Request) {
       payload.locale ?? "en",
     );
 
-    if (!result.ok) {
-      return NextResponse.json(
-        {
-          error: result.error ?? "Invalid product payload.",
-          fieldErrors: "fieldErrors" in result ? result.fieldErrors : undefined,
-        },
-        { status: result.status },
-      );
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
-    return NextResponse.json(result.item, { status: result.status });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     return NextResponse.json(
-      { error: "Failed to create product." },
+      { success: false, error: "Failed to create product." },
       { status: 500 },
     );
   }
@@ -80,29 +79,16 @@ export async function PUT(req: Request) {
     const payload = await req.json();
     const result = await updateAdminProduct(productId, payload);
 
-    if (!result.ok) {
-      return NextResponse.json(
-        {
-          error: "error" in result ? result.error : "Invalid product payload.",
-          fieldErrors:
-            "fieldErrors" in result
-              ? result.fieldErrors
-              : "errors" in result
-                ? result.errors
-                : undefined,
-        },
-        { status: result.status },
-      );
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
-    return NextResponse.json(result.item, { status: result.status });
+    return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     return NextResponse.json(
-      { error: "Failed to update product." },
+      { success: false, error: "Failed to update product." },
       { status: 500 },
     );
   }
@@ -125,21 +111,16 @@ export async function DELETE(req: Request) {
 
     const result = await deleteAdminProduct(productId);
 
-    if (!result.ok) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: result.status },
-      );
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     return NextResponse.json(
-      { error: "Failed to delete product." },
+      { success: false, error: "Failed to delete product." },
       { status: 500 },
     );
   }

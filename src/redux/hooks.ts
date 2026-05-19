@@ -1,15 +1,20 @@
 "use client";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "./store";
 
-/**
- * Typed dispatch hook — use instead of plain `useDispatch`.
- * Ensures dispatched actions are type-checked against AppDispatch.
- */
-export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
+import {
+  CartAction,
+  RootState,
+  dispatchCartAction,
+  useCartStore,
+} from "./features/cartSlice";
 
-/**
- * Typed selector hook — use instead of plain `useSelector`.
- * Ensures selected state is type-checked against RootState.
- */
-export const useAppSelector = useSelector.withTypes<RootState>();
+export const useAppDispatch = () => {
+  return (action: CartAction) => {
+    dispatchCartAction(action);
+  };
+};
+
+export const useAppSelector = <TSelected>(
+  selector: (state: RootState) => TSelected,
+): TSelected => {
+  return useCartStore((state) => selector({ cart: { items: state.items } }));
+};

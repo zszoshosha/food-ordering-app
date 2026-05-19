@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters";
+import { ActionResponse } from "@/types/action-response";
 import { MapPinned, PackageCheck, Truck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -34,16 +35,28 @@ const DeliveryDashboard = () => {
       const response = await fetch("/api/delivery/orders", {
         cache: "no-store",
       });
+
+      const payload = (await response.json()) as ActionResponse<
+        DeliveryOrder[]
+      >;
+
       if (!response.ok) {
-        if (response.status === 401) {
+        if (!payload.success && payload.error === "Unauthorized") {
           throw new Error(DELIVERY_AUTH_ERROR_MESSAGE);
         }
 
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error ?? "Failed to load delivery queue.");
+        if (!payload.success) {
+          throw new Error(payload.error || "Failed to load delivery queue.");
+        }
+
+        throw new Error("Failed to load delivery queue.");
       }
-      const data = (await response.json()) as { items: DeliveryOrder[] };
-      setOrders(data.items);
+
+      if (!payload.success) {
+        throw new Error(payload.error || "Failed to load delivery queue.");
+      }
+
+      setOrders(payload.data);
     } catch (error) {
       console.error("Error fetching delivery orders", error);
       const message =
@@ -77,9 +90,19 @@ const DeliveryDashboard = () => {
         body: JSON.stringify({ orderId }),
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as ActionResponse<{
+        id: string;
+        status: number;
+        updatedAt: string;
+      }>;
       if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to mark order as delivered.");
+        if (!payload.success) {
+          throw new Error(
+            payload.error || "Failed to mark order as delivered.",
+          );
+        }
+
+        throw new Error("Failed to mark order as delivered.");
       }
 
       setOrders((current) => current.filter((item) => item.id !== orderId));

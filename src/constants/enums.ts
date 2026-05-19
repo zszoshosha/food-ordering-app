@@ -23,6 +23,7 @@ export enum Routes {
   PROFILE = "profile",
   ADMIN = "admin",
   DELIVERY = "delivery",
+  UNAUTHORIZED = "unauthorized",
 }
 
 export enum Pages {

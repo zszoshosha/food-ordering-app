@@ -117,10 +117,10 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (token) {
-    // Signed-in regular users cannot access admin pages.
+    // Signed-in non-admin users are blocked from admin pages.
     if (routeSegment === Routes.ADMIN && token.role !== UserRole.ADMIN) {
       return NextResponse.redirect(
-        new URL(`/${locale}/${Routes.PROFILE}`, request.url),
+        new URL(`/${locale}/${Routes.UNAUTHORIZED}`, request.url),
       );
     }
 

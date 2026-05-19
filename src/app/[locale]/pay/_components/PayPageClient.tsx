@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearCart, selectCartItems } from "@/redux/features/cartSlice";
 import { getTotal } from "@/lib/cart";
 import { formatCurrency } from "@/lib/formatters";
+import { ActionResponse } from "@/types/action-response";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
@@ -67,16 +68,81 @@ const PayPageClient = ({ locale }: { locale: string }) => {
         body: JSON.stringify(payload),
       });
 
-      const result = (await response.json()) as {
-        id?: string;
-        error?: string;
-      };
+      const result = (await response.json()) as ActionResponse<{
+        id: string;
+        total: number;
+        createdAt: string;
+      }>;
 
       if (!response.ok) {
+        const errorMessage = !result.success ? result.error : t("orderError");
+        toast.error(errorMessage ?? t("orderError"), {
+          className: "bg-red-500 text-white",
+        });
+        return;
+      }
+
+      if (!result.success) {
         toast.error(result.error ?? t("orderError"), {
           className: "bg-red-500 text-white",
         });
         return;
+      }
+
+      const paymentIntentResponse = await fetch("/api/stripe/payment-intent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId: result.data.id }),
+      });
+
+      const paymentIntentResult = (await paymentIntentResponse.json()) as ActionResponse<{
+        orderId: string;
+        paymentIntentId: string;
+        clientSecret: string;
+        simulated: boolean;
+      }>;
+
+      if (!paymentIntentResponse.ok || !paymentIntentResult.success) {
+        toast.error(
+          !paymentIntentResult.success
+            ? paymentIntentResult.error
+            : t("orderError"),
+          {
+            className: "bg-red-500 text-white",
+          },
+        );
+        return;
+      }
+
+      if (paymentIntentResult.data.simulated) {
+        const confirmResponse = await fetch("/api/stripe/mock-confirm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId: paymentIntentResult.data.orderId,
+            paymentIntentId: paymentIntentResult.data.paymentIntentId,
+          }),
+        });
+
+        const confirmResult = (await confirmResponse.json()) as ActionResponse<{
+          orderId: string;
+          status: number;
+          paymentIntentId: string;
+        }>;
+
+        if (!confirmResponse.ok || !confirmResult.success) {
+          toast.error(
+            !confirmResult.success ? confirmResult.error : t("orderError"),
+            {
+              className: "bg-red-500 text-white",
+            },
+          );
+          return;
+        }
       }
 
       dispatch(clearCart());

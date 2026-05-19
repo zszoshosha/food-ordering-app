@@ -1,5 +1,15 @@
-import { getAdminUsers } from "@/server/Actions/Admin";
+import { getAdminUsers } from "../../../../server/Actions/Admin";
 import { NextRequest, NextResponse } from "next/server";
+
+const getErrorStatus = (
+  error: string,
+  validationErrors?: Record<string, string[]>,
+) => {
+  if (error === "Unauthorized") return 401;
+  if (validationErrors) return 400;
+  if (/failed/i.test(error)) return 500;
+  return 400;
+};
 
 /**
  * Returns paginated users for admin management.
@@ -20,14 +30,16 @@ export async function GET(req: Request) {
 
     const result = await getAdminUsers({ page, pageSize, search, role });
 
-    return NextResponse.json(result);
-  } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!result.success) {
+      return NextResponse.json(result, {
+        status: getErrorStatus(result.error, result.validationErrors),
+      });
     }
 
+    return NextResponse.json(result);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch users." },
+      { success: false, error: "Failed to fetch users." },
       { status: 500 },
     );
   }

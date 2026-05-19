@@ -2,101 +2,136 @@
 
 import { authOptions } from "@/server/auth";
 import { db, withPrismaRetry } from "@/lib/prisma";
+import {
+  OrderStatus,
+} from "@/lib/order-state-machine";
+import {
+  ActionResponse,
+  actionError,
+  actionSuccess,
+} from "@/types/action-response";
+import { deliveryOrderIdSchema } from "@/validation/delivery";
 import { getServerSession } from "next-auth";
 
 /**
  * Validates an authenticated delivery/admin session.
  */
-const requireDeliverySession = async () => {
+const requireDeliverySession = async (): Promise<
+  ActionResponse<{ userId: string }>
+> => {
   const session = await getServerSession(authOptions);
-  const role = session?.user?.role;
+  const user = session?.user as { id?: string; role?: string } | undefined;
+  const role = user?.role;
 
-  if (!session?.user?.id || (role !== "DELIVERY" && role !== "ADMIN")) {
-    throw new Error("Unauthorized");
+  if (!user?.id || (role !== "DELIVERY" && role !== "ADMIN")) {
+    return actionError("Unauthorized");
   }
 
-  return session;
+  return actionSuccess({ userId: user.id });
 };
 
 /**
  * Returns orders currently out for delivery.
  */
-export const getDeliveryOrders = async () => {
-  await requireDeliverySession();
+export const getDeliveryOrders = async (): Promise<
+  ActionResponse<
+    Array<{
+      id: string;
+      address: string;
+      total: number;
+      createdAt: Date;
+      user: {
+        name: string;
+        email: string;
+      };
+      orderItems: Array<{
+        quantity: number;
+      }>;
+    }>
+  >
+> => {
+  const auth = await requireDeliverySession();
+  if (!auth.success) {
+    return auth;
+  }
 
-  return withPrismaRetry(() =>
-    db.order.findMany({
-      where: {
-        status: 2,
-      },
-      orderBy: { createdAt: "asc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
+  try {
+    const orders = await withPrismaRetry(() =>
+      db.order.findMany({
+        where: {
+          status: OrderStatus.OUT_FOR_DELIVERY,
+        },
+        orderBy: { createdAt: "asc" },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          orderItems: {
+            select: {
+              quantity: true,
+            },
           },
         },
-        orderItems: {
-          select: {
-            quantity: true,
-          },
-        },
-      },
-    }),
-  );
+      }),
+    );
+
+    return actionSuccess(orders);
+  } catch {
+    return actionError("Failed to fetch delivery orders.");
+  }
 };
 
 /**
  * Marks an order as delivered from the delivery queue.
  */
-export const markOrderDelivered = async (orderId: string) => {
-  await requireDeliverySession();
+export const markOrderDelivered = async (
+  orderId: string,
+): Promise<
+  ActionResponse<{
+    id: string;
+    status: number;
+    updatedAt: string;
+  }>
+> => {
+  const auth = await requireDeliverySession();
+  if (!auth.success) {
+    return auth;
+  }
 
-  if (!orderId) {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "Order id is required.",
-    };
+  const parsed = deliveryOrderIdSchema.safeParse({ orderId });
+  if (!parsed.success) {
+    return actionError("Invalid order id.", parsed.error.flatten().fieldErrors);
   }
 
   const existing = await withPrismaRetry(() =>
     db.order.findUnique({
-      where: { id: orderId },
+      where: { id: parsed.data.orderId },
       select: { id: true, status: true },
     }),
   );
 
   if (!existing) {
-    return {
-      ok: false as const,
-      status: 404,
-      error: "Order not found.",
-    };
+    return actionError("Order not found.");
   }
 
-  if (existing.status !== 2) {
-    return {
-      ok: false as const,
-      status: 409,
-      error: "Only out-for-delivery orders can be completed.",
-    };
+  if (existing.status !== OrderStatus.OUT_FOR_DELIVERY) {
+    return actionError("Only out-for-delivery orders can be completed.");
   }
 
-  const updated = await db.order.update({
-    where: { id: orderId },
-    data: { status: 3 },
-    select: { id: true, status: true, updatedAt: true },
+  const updated = await withPrismaRetry(() =>
+    db.order.update({
+      where: { id: parsed.data.orderId },
+      data: { status: OrderStatus.DELIVERED },
+      select: { id: true, status: true, updatedAt: true },
+    }),
+  );
+
+  return actionSuccess({
+    id: updated.id,
+    status: updated.status,
+    updatedAt: updated.updatedAt.toISOString(),
   });
-
-  return {
-    ok: true as const,
-    status: 200,
-    item: {
-      id: updated.id,
-      status: updated.status,
-      updatedAt: updated.updatedAt.toISOString(),
-    },
-  };
 };
