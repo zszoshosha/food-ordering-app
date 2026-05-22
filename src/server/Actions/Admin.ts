@@ -31,10 +31,7 @@ import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
 import * as z from "zod";
-import {
-  CATEGORY_CACHE_TAG,
-  MENU_CACHE_TAG,
-} from "../../server/db/product";
+import { CATEGORY_CACHE_TAG, MENU_CACHE_TAG } from "../../server/db/product";
 
 type AdminOrderQuery = PaginationQuery & {
   status?: string;

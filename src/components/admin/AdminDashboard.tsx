@@ -282,7 +282,7 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
     return [0.35, 0.42, 0.39, 0.56, 0.63, 0.58, 0.74, 0.7].map(
       (multiplier, index) => {
         const x = 20 + index * 40;
-        const y = 150 - (base * multiplier) / Math.max(base, 1) * 110;
+        const y = 150 - ((base * multiplier) / Math.max(base, 1)) * 110;
         return `${x},${Math.max(18, Math.min(150, y))}`;
       },
     );
@@ -612,7 +612,9 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
       toast.promise(submitPromise, {
         loading: isEditing ? "Updating product..." : "Creating product...",
         success: isEditing ? "Product updated." : "Product created.",
-        error: isEditing ? "Failed to update product." : "Failed to create product.",
+        error: isEditing
+          ? "Failed to update product."
+          : "Failed to create product.",
       });
 
       const response = await submitPromise;
@@ -667,20 +669,20 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
    * Deletes a product and refreshes the products list.
    */
   const removeProduct = async (productId: string) => {
-      applyProductOptimistic({ type: "remove", id: productId });
+    applyProductOptimistic({ type: "remove", id: productId });
 
     try {
-        const deletePromise = fetch(`/api/admin/products?id=${productId}`, {
+      const deletePromise = fetch(`/api/admin/products?id=${productId}`, {
         method: "DELETE",
       });
 
-        toast.promise(deletePromise, {
-          loading: "Deleting product...",
-          success: "Product deleted.",
-          error: "Failed to delete product.",
-        });
+      toast.promise(deletePromise, {
+        loading: "Deleting product...",
+        success: "Product deleted.",
+        error: "Failed to delete product.",
+      });
 
-        const response = await deletePromise;
+      const response = await deletePromise;
 
       const payload = (await response.json()) as ActionResponse<{
         deleted: true;

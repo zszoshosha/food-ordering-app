@@ -2,9 +2,7 @@
 
 import { authOptions } from "@/server/auth";
 import { db, withPrismaRetry } from "@/lib/prisma";
-import {
-  OrderStatus,
-} from "@/lib/order-state-machine";
+import { OrderStatus } from "@/lib/order-state-machine";
 import {
   ActionResponse,
   actionError,
