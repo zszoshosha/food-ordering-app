@@ -10,3 +10,24 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+/**
+ * Converts text into a URL-safe slug while preserving English and Arabic letters.
+ */
+export function slugify(text: string): string {
+  const normalized = text
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .toLowerCase()
+    .trim()
+
+  const cleaned = normalized.replace(
+    /[^a-z0-9\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\s-]/g,
+    "",
+  )
+
+  return cleaned
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+}

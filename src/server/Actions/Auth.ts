@@ -2,7 +2,8 @@
 
 import { Locale } from "@/i18n/request";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
-import { db, withPrismaRetry } from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { withPrismaRetry } from "@/lib/prisma";
 import getTrans from "@/lib/translation";
 import { CreateUserSchema, loginSchema } from "@/validation/auth";
 import bcrypt from "bcryptjs";

@@ -13,9 +13,9 @@ import { Environments } from "@/constants/enums";
 import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { db } from "@/lib/prisma";
-import { login } from "./Actions/Auth";
-import { Locale } from "@/i18n/request";
+import { db } from "@/lib/db";
+import { withPrismaRetry } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 import {
   AUTH_ROLES,
   mapDatabaseRoleToAuthRole,
@@ -75,10 +75,10 @@ export const authOptions: NextAuthOptions = {
     Credentials({
       name: "Credentials",
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-          placeholder: "Enter your email",
+        identifier: {
+          label: "Email or Username",
+          type: "text",
+          placeholder: "Enter email or username",
         },
         password: {
           label: "Password",
@@ -86,24 +86,43 @@ export const authOptions: NextAuthOptions = {
           placeholder: "Enter your password",
         },
       },
-      authorize: async (credentials, req) => {
-        // Infer locale from the current auth page URL so validation messages
-        // returned by the server action are localized for this login request.
-        const currentUrl = req?.headers?.referer || "";
-        const locale = currentUrl.split("/")[3] as Locale;
-        const res = await login(credentials, locale);
-        if (res?.status === "200" && res?.user) {
-          return res.user;
-        } else {
-          // Pass structured errors through NextAuth's error channel so the
-          // client can decode and show a friendly toast message.
-          throw new Error(
-            JSON.stringify({
-              validationError: res.errors,
-              responseError: res.message,
-            }),
-          );
+      authorize: async (credentials) => {
+        const identifier =
+          credentials?.identifier ||
+          (credentials as { email?: string | null } | null)?.email ||
+          "";
+        const password = credentials?.password || "";
+
+        if (!identifier || !password) {
+          return null;
         }
+
+        const user = await withPrismaRetry(() =>
+          db.user.findFirst({
+            where: {
+              OR: [
+                { email: identifier },
+                { name: identifier },
+              ],
+            },
+          }),
+        );
+
+        if (!user) {
+          return null;
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
       },
     }),
     // Add your authentication providers here

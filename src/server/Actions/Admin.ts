@@ -33,6 +33,7 @@ import { revalidateTag } from "next/cache";
 import * as z from "zod";
 import { CATEGORY_CACHE_TAG, MENU_CACHE_TAG } from "../../server/db/product";
 import { broadcastOrderStatusUpdate } from "@/lib/pusher-server";
+import { slugify } from "@/lib/utils";
 
 type AdminOrderQuery = PaginationQuery & {
   status?: string;
@@ -68,6 +69,34 @@ const requireAdminSession = async (): Promise<
 const revalidatePublicMenuCache = () => {
   revalidateTag(MENU_CACHE_TAG, "max");
   revalidateTag(CATEGORY_CACHE_TAG, "max");
+};
+
+const generateUniqueProductSlug = async (
+  name: string,
+  excludeProductId?: string,
+) => {
+  const baseSlug = slugify(name) || "product";
+
+  for (let attempt = 0; attempt <= 50; attempt += 1) {
+    const suffix = attempt === 0 ? "" : "-" + String(attempt);
+    const candidate = baseSlug + suffix;
+
+    const existing = await withPrismaRetry(() =>
+      db.product.findFirst({
+        where: {
+          slug: candidate,
+          ...(excludeProductId ? { id: { not: excludeProductId } } : {}),
+        } as never,
+        select: { id: true },
+      } as never),
+    );
+
+    if (!existing) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Failed to generate a unique slug.");
 };
 
 const validateProductId = (productId: string) => {
@@ -206,14 +235,20 @@ export const createAdminProduct = async (
       }),
     );
 
+    const productSlug = await generateUniqueProductSlug(parsed.data.name);
+
+    const categorySlug = slugify(parsed.data.category);
+
     const created = await withPrismaRetry(() =>
       db.product.create({
         data: {
+          slug: productSlug,
           name: parsed.data.name,
           description: parsed.data.description,
           image: parsed.data.image,
           basePrice: parsed.data.basePrice,
           category: parsed.data.category,
+          categorySlug,
           order: parsed.data.order ?? (maxOrder._max.order ?? 0) + 1,
           sizes: {
             create: parsed.data.sizes.map((size) => ({
@@ -277,6 +312,13 @@ export const updateAdminProduct = async (
       return actionError("Product not found.");
     }
 
+    const productSlug = await generateUniqueProductSlug(
+      parsed.data.name,
+      validProductId.data,
+    );
+
+    const categorySlug = slugify(parsed.data.category);
+
     const updated = await db.$transaction(async (tx) => {
       await tx.size.deleteMany({ where: { productId: validProductId.data } });
       await tx.extra.deleteMany({ where: { productId: validProductId.data } });
@@ -284,11 +326,13 @@ export const updateAdminProduct = async (
       return tx.product.update({
         where: { id: validProductId.data },
         data: {
+          slug: productSlug,
           name: parsed.data.name,
           description: parsed.data.description,
           image: parsed.data.image,
           basePrice: parsed.data.basePrice,
           category: parsed.data.category,
+          categorySlug,
           order: parsed.data.order ?? 0,
           sizes: {
             create: parsed.data.sizes.map((size) => ({
@@ -355,6 +399,63 @@ export const deleteAdminProduct = async (
     return actionSuccess({ deleted: true });
   } catch {
     return actionError("Failed to delete product.");
+  }
+};
+
+/**
+ * One-time backfill helper to populate missing product slugs.
+ */
+export const backfillMissingProductSlugs = async (): Promise<
+  ActionResponse<{ updatedCount: number }>
+> => {
+  const auth = await requireAdminSession();
+  if (!auth.success) {
+    return auth;
+  }
+
+  try {
+    const productsWithoutSlug = await withPrismaRetry(() =>
+      db.product.findMany({
+        where: {
+          OR: [{ slug: null }, { slug: "" }],
+        } as never,
+        select: {
+          id: true,
+          name: true,
+          category: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      } as never),
+    );
+
+    let updatedCount = 0;
+
+    for (const product of productsWithoutSlug) {
+      const nextSlug = await generateUniqueProductSlug(product.name, product.id);
+      const nextCategorySlug = slugify(String(product.category));
+
+      await withPrismaRetry(() =>
+        db.product.update({
+          where: { id: product.id },
+          data: {
+            slug: nextSlug,
+            categorySlug: nextCategorySlug,
+          } as never,
+        } as never),
+      );
+
+      updatedCount += 1;
+    }
+
+    if (updatedCount > 0) {
+      revalidatePublicMenuCache();
+    }
+
+    return actionSuccess({ updatedCount });
+  } catch {
+    return actionError("Failed to backfill product slugs.");
   }
 };
 

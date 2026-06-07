@@ -1,9 +1,32 @@
 import { Cache } from "@/lib/cache";
 import { db, withPrismaRetry } from "@/lib/prisma";
 import { ProductWithRelations } from "@/types/Product";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
-export const MENU_CACHE_TAG = "menu-cache";
+export const MENU_CACHE_TAG = "menu-data";
 export const CATEGORY_CACHE_TAG = "categories-cache";
+export const PRODUCT_CACHE_TAG = "product-cache";
+
+/**
+ * Example of combining React request deduping and Next persistent caching.
+ * Use this in server components to heavily cache the menu catalog for 1 hour.
+ */
+export const getMenuCatalogCached = unstable_cache(
+  cache(async (): Promise<ProductWithRelations[]> => {
+    return withPrismaRetry(() =>
+      db.product.findMany({
+        include: { sizes: true, extras: true },
+        orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      }),
+    );
+  }),
+  ["menu-catalog"],
+  {
+    revalidate: 3600,
+    tags: [MENU_CACHE_TAG],
+  },
+);
 
 /**
  * Fetches all products with their sizes and extras from the database.
@@ -60,5 +83,54 @@ export const getMenuCategoriesByDb = Cache(
   {
     revalidate: 3600,
     tags: [CATEGORY_CACHE_TAG],
+  },
+);
+
+/**
+ * Fetches a single product by id with sizes and extras.
+ * Uses cache tags so admin updates can invalidate product details pages.
+ */
+export const getProductByIdByDb = Cache(
+  async (id: string) => {
+    try {
+      return await withPrismaRetry(() =>
+        db.product.findUnique({
+          where: { id },
+          include: { sizes: true, extras: true },
+        }),
+      );
+    } catch (error) {
+      console.error(`Failed to load product ${id}:`, error);
+      return null;
+    }
+  },
+  ["menu-product-by-id"],
+  {
+    revalidate: 3600,
+    tags: [MENU_CACHE_TAG, PRODUCT_CACHE_TAG],
+  },
+);
+
+/**
+ * Fetches a single product by product slug.
+ */
+export const getProductBySlugByDb = Cache(
+  async (slug: string) => {
+    try {
+      return await withPrismaRetry(() =>
+        db.product.findFirst({
+          where: { slug } as never,
+          include: { sizes: true, extras: true },
+        } as never),
+      );
+    } catch (error) {
+      console.error(`Failed to load product slug ${slug}:`, error);
+      return null;
+    }
+  },
+  ["menu-product-by-slug"],
+  {
+    revalidate: 3600,
+    tags: [MENU_CACHE_TAG, PRODUCT_CACHE_TAG],
   },
 );
