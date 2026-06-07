@@ -1,3 +1,6 @@
+import { AUTH_ROLES } from "@/lib/auth/roles";
+import { authOptions } from "@/server/auth";
+import { getServerSession } from "next-auth";
 import { getAdminOverview } from "../../../../server/Actions/Admin";
 import { NextResponse } from "next/server";
 
@@ -5,6 +8,22 @@ import { NextResponse } from "next/server";
  * Returns aggregate owner KPIs for the admin dashboard.
  */
 export async function GET() {
+  // Secondary gate at the route level in addition to middleware/action checks.
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
+  if (session.user.role !== AUTH_ROLES.ADMIN) {
+    return NextResponse.json(
+      { success: false, error: "Forbidden" },
+      { status: 403 },
+    );
+  }
+
   const result = await getAdminOverview();
 
   if (!result.success) {

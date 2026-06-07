@@ -10,7 +10,7 @@ const DeliveryPage = async ({
   params: Promise<{ locale: string }>;
 }) => {
   const { locale } = await params;
-  await requireAuth(locale, "DELIVERY");
+  await requireAuth(locale);
 
   return (
     <main className="min-h-screen py-10 md:py-16">

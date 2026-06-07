@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "@/components/link";
-import { Pages, Routes } from "@/constants/enums";
+import { Routes } from "@/constants/enums";
+import { AUTH_ROLES } from "@/lib/auth/roles";
 import { buttonVariants } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -34,7 +35,7 @@ const AuthButtons = ({
     return (
       <div className={className}>
         <Link
-          href={`${Routes.AUTH}/${Pages.LOGIN}`}
+          href="/login"
           onClick={onNavigate}
           className={`${buttonVariants({ size: "lg" })} px-8! rounded-full hover:scale-105 transition-transform duration-200 bg-linear-to-r from-primary to-primary/80`}
         >
@@ -46,22 +47,13 @@ const AuthButtons = ({
 
   return (
     <div className={className}>
-      {session.user.role === "ADMIN" && (
+      {session.user.role === AUTH_ROLES.ADMIN && (
         <Link
           href={Routes.ADMIN}
           onClick={onNavigate}
           className={`${buttonVariants({ size: "lg", variant: "outline" })} rounded-full`}
         >
           {t("admin")}
-        </Link>
-      )}
-      {session.user.role === "DELIVERY" && (
-        <Link
-          href={Routes.DELIVERY}
-          onClick={onNavigate}
-          className={`${buttonVariants({ size: "lg", variant: "outline" })} rounded-full`}
-        >
-          {t("delivery")}
         </Link>
       )}
       <Link
@@ -75,7 +67,7 @@ const AuthButtons = ({
         type="button"
         onClick={() =>
           signOut({
-            callbackUrl: `/${locale}/${Routes.AUTH}/${Pages.LOGIN}`,
+            callbackUrl: `/${locale}/login`,
           })
         }
         className={`${buttonVariants({ size: "lg" })} rounded-full`}

@@ -25,12 +25,10 @@ export const loginSchema = (translation: Translations) => {
 };
 
 /**
- * Zod schema for the sign-up form.
- * Validates name, email, password length, and that confirmPassword matches password.
- *
- * @param {Translations} translation - Localised validation messages.
+ * Shared create-user schema for both client and server usage.
+ * Keep this as the canonical shape for registration payload validation.
  */
-export const signupSchema = (translation: Translations) => {
+export const CreateUserSchema = (translation: Translations) => {
   return z
     .object({
       name: z
@@ -51,6 +49,13 @@ export const signupSchema = (translation: Translations) => {
       path: ["confirmPassword"],
     });
 };
+
+/**
+ * Backward-compatible alias used by existing signup flow.
+ */
+export const signupSchema = CreateUserSchema;
+
+export type CreateUserInput = z.infer<ReturnType<typeof CreateUserSchema>>;
 
 export type ValidationErrors =
   | {

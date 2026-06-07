@@ -4,7 +4,7 @@ import { Locale } from "@/i18n/request";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
 import { db, withPrismaRetry } from "@/lib/prisma";
 import getTrans from "@/lib/translation";
-import { loginSchema, signupSchema } from "@/validation/auth";
+import { CreateUserSchema, loginSchema } from "@/validation/auth";
 import bcrypt from "bcryptjs";
 import * as z from "zod";
 
@@ -21,6 +21,9 @@ export type SignupState = {
   };
 };
 
+const mapValidationErrors = (error: z.ZodError) =>
+  z.flattenError(error).fieldErrors;
+
 export const login = async (
   credentials: Record<"email" | "password", string> | undefined,
   locale: Locale,
@@ -29,7 +32,7 @@ export const login = async (
   // Validate credentials with locale-specific zod messages.
   const result = loginSchema(translations).safeParse(credentials);
   if (!result.success) {
-    const errors = z.flattenError(result.error).fieldErrors;
+    const errors = mapValidationErrors(result.error);
     return { status: "400", errors };
   }
 
@@ -83,12 +86,12 @@ export const signup = async (
 ): Promise<SignupState> => {
   const locale = await getCurrentLocale();
   const translations = await getTrans(locale);
-  const result = signupSchema(translations).safeParse(
+  const result = CreateUserSchema(translations).safeParse(
     Object.fromEntries(formdata.entries()),
   );
   if (!result.success) {
     return {
-      errors: z.flattenError(result.error).fieldErrors,
+      errors: mapValidationErrors(result.error),
       formdata,
     };
   }

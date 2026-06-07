@@ -9,16 +9,21 @@
  * - JWT sessions with 7-day max age and 24-hour update interval
  * - Custom sign-in and sign-out page routes
  */
-import { Environments, Pages, Routes, UserRole } from "@/constants/enums";
+import { Environments } from "@/constants/enums";
 import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/prisma";
 import { login } from "./Actions/Auth";
 import { Locale } from "@/i18n/request";
+import {
+  AUTH_ROLES,
+  mapDatabaseRoleToAuthRole,
+} from "@/lib/auth/roles";
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || crypto.randomUUID(),
+  // Keep this stable across deploys so JWT/session verification remains valid.
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === Environments.DEV,
   session: {
     strategy: "jwt",
@@ -26,8 +31,8 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   pages: {
-    signIn: `/${Routes.AUTH}/${Pages.LOGIN}`,
-    signOut: `/${Routes.AUTH}/${Pages.REGISTER}`,
+    signIn: "/login",
+    newUser: "/register",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -35,11 +40,13 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
-        token.role = (user as { role?: UserRole }).role ?? UserRole.USER;
+        token.role = mapDatabaseRoleToAuthRole(
+          (user as { role?: string }).role,
+        );
       }
 
       if (!token.role) {
-        token.role = UserRole.USER;
+        token.role = AUTH_ROLES.GUEST;
       }
 
       return token;
@@ -57,7 +64,9 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
       }
 
-      session.user.role = (token.role as UserRole | undefined) ?? UserRole.USER;
+      session.user.role =
+        (token.role as (typeof AUTH_ROLES)[keyof typeof AUTH_ROLES] | undefined) ??
+        AUTH_ROLES.GUEST;
 
       return session;
     },
