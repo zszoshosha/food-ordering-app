@@ -57,7 +57,7 @@ export const adminProductSchema = z.object({
  */
 export const adminOrderStatusSchema = z.object({
   orderId: z.string().cuid(),
-  status: z.coerce.number().int().min(0).max(4),
+  status: z.coerce.number().int().min(0).max(5),
 });
 
 /**
@@ -84,7 +84,7 @@ export const adminUsersQuerySchema = adminPaginationSchema.extend({
  */
 export const adminOrdersQuerySchema = adminPaginationSchema.extend({
   status: z
-    .union([z.literal("ALL"), z.coerce.number().int().min(0).max(4)])
+    .union([z.literal("ALL"), z.coerce.number().int().min(0).max(5)])
     .optional()
     .default("ALL"),
 });

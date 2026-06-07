@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserRole } from "@/constants/enums";
-
-type AppRole = "USER" | "ADMIN" | "DELIVERY";
+import { AuthRole, AUTH_ROLES } from "@/lib/auth/roles";
 
 type EditUserFormProps = {
   title: string;
@@ -18,7 +16,7 @@ type EditUserFormProps = {
   user: {
     name?: string | null;
     email?: string | null;
-    role: AppRole;
+    role: AuthRole;
   };
 };
 
@@ -38,7 +36,7 @@ const EditUserForm = ({
   },
   user,
 }: EditUserFormProps) => {
-  const isAdmin = user.role === UserRole.ADMIN;
+  const isAdmin = user.role === AUTH_ROLES.ADMIN;
 
   return (
     <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">

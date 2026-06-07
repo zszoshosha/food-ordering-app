@@ -1,6 +1,4 @@
-import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -46,20 +44,18 @@ export async function POST(req: Request) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const dataUri = `data:${file.type};base64,${buffer.toString("base64")}`;
+    const uploaded = await uploadImageToCloudinary(dataUri, {
+      folder: "food-ordering/products",
+    });
 
-    const extension = path.extname(file.name).toLowerCase() || ".jpg";
-    const fileName = `${Date.now()}-${randomUUID()}${extension}`;
-
-    const relativeDir = path.join("assets", "images", "uploads");
-    const absoluteDir = path.join(process.cwd(), "public", relativeDir);
-    await mkdir(absoluteDir, { recursive: true });
-
-    const absolutePath = path.join(absoluteDir, fileName);
-    await writeFile(absolutePath, buffer);
-
-    const imageUrl = `/${relativeDir.replace(/\\/g, "/")}/${fileName}`;
-
-    return NextResponse.json({ imageUrl }, { status: 201 });
+    return NextResponse.json(
+      {
+        imageUrl: uploaded.secure_url,
+        publicId: uploaded.public_id,
+      },
+      { status: 201 },
+    );
   } catch {
     return NextResponse.json(
       { error: "Failed to upload image." },

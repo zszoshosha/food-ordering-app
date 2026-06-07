@@ -10,10 +10,11 @@ import {
  */
 export enum AdminOrderStatus {
   PENDING = 0,
-  PAID = 1,
+  CONFIRMED = 1,
   PREPARING = 2,
   OUT_FOR_DELIVERY = 3,
   DELIVERED = 4,
+  CANCELLED = 5,
 }
 
 /**

@@ -61,8 +61,8 @@ export const markOrderPaid = async (
     return actionError("Order not found.");
   }
 
-  if (!isValidOrderTransition(order.status, OrderStatus.PAID)) {
-    if (order.status === OrderStatus.PAID) {
+  if (!isValidOrderTransition(order.status, OrderStatus.CONFIRMED)) {
+    if (order.status === OrderStatus.CONFIRMED) {
       return actionSuccess({
         orderId: order.id,
         status: order.status,
@@ -77,7 +77,7 @@ export const markOrderPaid = async (
     db.order.update({
       where: { id: order.id },
       data: {
-        status: OrderStatus.PAID,
+        status: OrderStatus.CONFIRMED,
       },
       select: {
         id: true,

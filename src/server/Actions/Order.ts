@@ -162,3 +162,58 @@ export const getUserOrders = async (
     return actionError("Failed to fetch orders.");
   }
 };
+
+export const getUserOrderById = async (
+  userId: string,
+  orderId: string,
+): Promise<
+  ActionResponse<
+    | (Awaited<ReturnType<typeof getUserOrdersByDb>>[number] & {
+        orderItems: Array<{
+          id: string;
+          quantity: number;
+          price: number;
+          product: {
+            id: string;
+            name: string;
+            image: string;
+            basePrice: number;
+          };
+        }>;
+      })
+    | null
+  >
+> => {
+  const parsedUserId = userIdSchema.safeParse(userId);
+  const parsedOrderId = z.string().cuid().safeParse(orderId);
+
+  if (!parsedUserId.success || !parsedOrderId.success) {
+    return actionError("Invalid order lookup payload.");
+  }
+
+  try {
+    const order = await withPrismaRetry(() =>
+      db.order.findFirst({
+        where: {
+          id: parsedOrderId.data,
+          userId: parsedUserId.data,
+        },
+        include: {
+          orderItems: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      }),
+    );
+
+    if (!order) {
+      return actionError("Order not found.");
+    }
+
+    return actionSuccess(order);
+  } catch {
+    return actionError("Failed to fetch order.");
+  }
+};

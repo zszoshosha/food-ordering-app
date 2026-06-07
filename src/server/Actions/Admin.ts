@@ -32,6 +32,7 @@ import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
 import * as z from "zod";
 import { CATEGORY_CACHE_TAG, MENU_CACHE_TAG } from "../../server/db/product";
+import { broadcastOrderStatusUpdate } from "@/lib/pusher-server";
 
 type AdminOrderQuery = PaginationQuery & {
   status?: string;
@@ -580,6 +581,8 @@ export const updateAdminOrderStatus = async (
         },
       }),
     );
+
+    await broadcastOrderStatusUpdate(updated.id, updated.status);
 
     return actionSuccess({
       id: updated.id,

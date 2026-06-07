@@ -2,23 +2,36 @@ import Stripe from "stripe";
 
 let stripeClient: Stripe | null = null;
 
-export const getStripeClient = () => {
-  if (stripeClient) {
-    return stripeClient;
-  }
+const STRIPE_API_VERSION = "2026-04-22.dahlia" as const;
 
+const getStripeSecretKey = () => {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
     return null;
   }
 
+  return secretKey;
+};
+
+export const getStripeClient = () => {
+  if (stripeClient) {
+    return stripeClient;
+  }
+
+  const secretKey = getStripeSecretKey();
+  if (!secretKey) {
+    return null;
+  }
+
   stripeClient = new Stripe(secretKey, {
-    apiVersion: "2026-04-22.dahlia",
+    apiVersion: STRIPE_API_VERSION,
     typescript: true,
   });
 
   return stripeClient;
 };
+
+export const stripe = getStripeClient();
 
 export const isStripeSimulationMode = () => {
   if (process.env.STRIPE_SIMULATION_MODE) {

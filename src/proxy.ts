@@ -31,6 +31,23 @@ const intlMiddleware = createMiddleware({
 const publicPaths = new Set(["/", "/login", "/register"]);
 const legacyAuthPaths = new Set(["/auth/signin", "/auth/signup"]);
 
+const shouldBypassProxy = (pathname: string) => {
+  if (pathname.startsWith("/_next")) {
+    return true;
+  }
+
+  if (pathname.startsWith("/api")) {
+    return true;
+  }
+
+  // Skip requests for files like .js, .css, .woff2, images, etc.
+  if (/\.[^/]+$/.test(pathname)) {
+    return true;
+  }
+
+  return false;
+};
+
 const routeStartsWith = (path: string, prefix: string) =>
   path === prefix || path.startsWith(`${prefix}/`);
 
@@ -56,6 +73,10 @@ const getLocaleFromPath = (pathname: string) => {
 };
 
 export default async function proxy(request: NextRequest) {
+  if (shouldBypassProxy(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
   const response = intlMiddleware(request);
   const locale = getLocaleFromPath(request.nextUrl.pathname);
   const normalizedPath = normalizePath(request.nextUrl.pathname);

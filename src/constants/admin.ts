@@ -5,10 +5,11 @@ import { AdminOrderStatus } from "@/types/admin";
  */
 export const ADMIN_ORDER_STATUS_LABELS: Record<AdminOrderStatus, string> = {
   [AdminOrderStatus.PENDING]: "Pending",
-  [AdminOrderStatus.PAID]: "Paid",
+  [AdminOrderStatus.CONFIRMED]: "Confirmed",
   [AdminOrderStatus.PREPARING]: "Preparing",
   [AdminOrderStatus.OUT_FOR_DELIVERY]: "Out for Delivery",
   [AdminOrderStatus.DELIVERED]: "Delivered",
+  [AdminOrderStatus.CANCELLED]: "Cancelled",
 };
 
 /**
@@ -16,8 +17,9 @@ export const ADMIN_ORDER_STATUS_LABELS: Record<AdminOrderStatus, string> = {
  */
 export const ADMIN_ORDER_STATUS_OPTIONS = [
   { value: AdminOrderStatus.PENDING, label: "Pending" },
-  { value: AdminOrderStatus.PAID, label: "Paid" },
+  { value: AdminOrderStatus.CONFIRMED, label: "Confirmed" },
   { value: AdminOrderStatus.PREPARING, label: "Preparing" },
   { value: AdminOrderStatus.OUT_FOR_DELIVERY, label: "Out for Delivery" },
   { value: AdminOrderStatus.DELIVERED, label: "Delivered" },
+  { value: AdminOrderStatus.CANCELLED, label: "Cancelled" },
 ] as const;
