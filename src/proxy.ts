@@ -15,7 +15,7 @@ import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 import { Routes } from "./constants/enums";
 import { AUTH_ROLES, isAdminRole } from "./lib/auth/roles";
-import { locales, defaultLocale } from "./i18n/request";
+import { locales, defaultLocale } from "./i18n/config";
 
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
@@ -121,3 +121,7 @@ export default async function proxy(request: NextRequest) {
   return NextResponse.redirect(signInUrl);
 }
 
+export const config = {
+  // Match all page routes (with or without locale) while excluding API/static assets.
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
+};

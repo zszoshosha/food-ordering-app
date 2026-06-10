@@ -7,7 +7,7 @@
  *
  * Example: URL "/en/auth/signin" → locale = "en"
  */
-import { Locale } from "@/i18n/request";
+import { Locale } from "@/i18n/config";
 import { headers } from "next/headers";
 
 export const getCurrentLocale = async () => {

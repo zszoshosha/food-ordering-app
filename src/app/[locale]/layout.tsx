@@ -11,7 +11,7 @@
  */
 import Footer from "@/components/footer";
 import Header from "@/components/header";
-import { locales } from "@/i18n/request";
+import { locales } from "@/i18n/config";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";

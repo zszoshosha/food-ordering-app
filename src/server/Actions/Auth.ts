@@ -1,6 +1,6 @@
 "use server";
 
-import { Locale } from "@/i18n/request";
+import { Locale } from "@/i18n/config";
 import { getCurrentLocale } from "@/lib/getCurrentLocale";
 import { db } from "@/lib/db";
 import { withPrismaRetry } from "@/lib/prisma";

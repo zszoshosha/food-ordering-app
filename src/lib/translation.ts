@@ -10,7 +10,7 @@
  */
 import "server-only";
 
-import { Locale } from "@/i18n/request";
+import { Locale } from "@/i18n/config";
 
 // Lazy-loaded translation dictionaries for server-side typed translations
 // These are separate from i18n/locales (used by next-intl for client-side).

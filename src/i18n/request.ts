@@ -8,14 +8,9 @@
  * Supported locales: English (en), Arabic (ar)
  */
 import { getRequestConfig } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { defaultLocale, locales, type Locale } from "./config";
 
-// Define all supported locales as a const tuple for type safety
-export const locales = ["en", "ar"] as const;
-export type Locale = (typeof locales)[number];
-
-// Default fallback locale when no match is found
-export const defaultLocale: Locale = "en";
+export { defaultLocale, locales, type Locale } from "./config";
 
 /**
  * Configures the request-level i18n settings.
