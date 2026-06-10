@@ -13,9 +13,24 @@
 import createMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
-import { Routes } from "./constants/enums";
-import { AUTH_ROLES, isAdminRole } from "./lib/auth/roles";
 import { locales, defaultLocale } from "./i18n/config";
+
+// Inlined from ./constants/enums — keep proxy free of local module graph for Edge tracing.
+const Routes = {
+  PROFILE: "profile",
+  ADMIN: "admin",
+  UNAUTHORIZED: "unauthorized",
+} as const;
+
+// Inlined from ./lib/auth/roles
+const AUTH_ROLES = {
+  GUEST: "GUEST",
+  CUSTOMER: "CUSTOMER",
+  ADMIN: "ADMIN",
+} as const;
+
+const isAdminRole = (role?: string | null): boolean =>
+  role === AUTH_ROLES.ADMIN;
 
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported

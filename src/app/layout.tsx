@@ -3,6 +3,8 @@ import { Manrope, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { Sonner } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next"
+
 
 /**
  * Body font configuration for the application.
