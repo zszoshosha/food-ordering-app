@@ -6,3 +6,4 @@ export const config = {
 	// Match all page routes (with or without locale) while excluding API/static assets.
 	matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
+// force clean build
