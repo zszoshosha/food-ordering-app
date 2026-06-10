@@ -3,7 +3,7 @@ import Link from "next/link";
 /**
  * Global not-found UI for missing pages and menu items.
  */
-export default function NotFound(): JSX.Element {
+export default function NotFound() {
   return (
     <main className="page-surface min-h-[70vh] py-12 md:py-16">
       <section className="container mx-auto px-4">
@@ -17,11 +17,15 @@ export default function NotFound(): JSX.Element {
                 We could not find this menu item
               </h1>
               <p className="mt-4 text-muted-foreground">
-                The product may have been removed, renamed, or the link is outdated.
-                You can browse the latest menu and discover available dishes.
+                The product may have been removed, renamed, or the link is
+                outdated. You can browse the latest menu and discover available
+                dishes.
               </p>
 
-              <nav aria-label="Not found actions" className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <nav
+                aria-label="Not found actions"
+                className="mt-8 flex flex-col gap-3 sm:flex-row"
+              >
                 <Link
                   href="/menu"
                   className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
@@ -42,7 +46,9 @@ export default function NotFound(): JSX.Element {
               <div className="pointer-events-none absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-emerald-300/20 blur-2xl" />
               <div className="relative">
                 <p className="text-7xl leading-none">🍕</p>
-                <h2 className="mt-4 text-xl font-semibold text-foreground">Fresh Picks Await</h2>
+                <h2 className="mt-4 text-xl font-semibold text-foreground">
+                  Fresh Picks Await
+                </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Jump back into the catalog and find your next favorite meal.
                 </p>

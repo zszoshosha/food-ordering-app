@@ -43,7 +43,7 @@ function MenuGridSkeleton() {
  * Global route-level loading fallback for App Router streaming.
  * Suspense keeps this compatible with nested async boundaries.
  */
-export default function Loading(): JSX.Element {
+export default function Loading() {
   return (
     <Suspense fallback={<MenuGridSkeleton />}>
       <MenuGridSkeleton />

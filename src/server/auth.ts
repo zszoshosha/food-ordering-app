@@ -16,10 +16,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { withPrismaRetry } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import {
-  AUTH_ROLES,
-  mapDatabaseRoleToAuthRole,
-} from "@/lib/auth/roles";
+import { AUTH_ROLES, mapDatabaseRoleToAuthRole } from "@/lib/auth/roles";
 
 export const authOptions: NextAuthOptions = {
   // Keep this stable across deploys so JWT/session verification remains valid.
@@ -65,8 +62,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       session.user.role =
-        (token.role as (typeof AUTH_ROLES)[keyof typeof AUTH_ROLES] | undefined) ??
-        AUTH_ROLES.GUEST;
+        (token.role as
+          | (typeof AUTH_ROLES)[keyof typeof AUTH_ROLES]
+          | undefined) ?? AUTH_ROLES.GUEST;
 
       return session;
     },
@@ -100,10 +98,7 @@ export const authOptions: NextAuthOptions = {
         const user = await withPrismaRetry(() =>
           db.user.findFirst({
             where: {
-              OR: [
-                { email: identifier },
-                { name: identifier },
-              ],
+              OR: [{ email: identifier }, { name: identifier }],
             },
           }),
         );

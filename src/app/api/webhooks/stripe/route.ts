@@ -1,6 +1,10 @@
 import { db, withPrismaRetry } from "@/lib/prisma";
 import { getStripeClient } from "@/lib/stripe";
-import { OrderStatus } from "@/lib/order-state-machine";
+import {
+  fromPrismaOrderStatus,
+  OrderStatus,
+  toPrismaOrderStatus,
+} from "@/lib/order-state-machine";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -25,14 +29,13 @@ const processCheckoutCompleted = async (
       );
     }
 
-    // Idempotent update: if already paid, skip write.
-    if (order.status === OrderStatus.CONFIRMED) {
+    if (fromPrismaOrderStatus(order.status) === OrderStatus.CONFIRMED) {
       return;
     }
 
     await db.order.update({
       where: { id: order.id },
-      data: { status: OrderStatus.CONFIRMED },
+      data: { status: toPrismaOrderStatus(OrderStatus.CONFIRMED) },
     });
   });
 };

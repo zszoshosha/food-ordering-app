@@ -12,8 +12,10 @@ import {
   PaginationQuery,
 } from "../../types/admin";
 import {
+  fromPrismaOrderStatus,
   isValidOrderTransition,
   OrderStatus,
+  toPrismaOrderStatus,
 } from "../../lib/order-state-machine";
 import {
   ActionResponse,
@@ -134,9 +136,17 @@ export const getAdminOverview = async (): Promise<
       todayRevenueAgg,
     ] = await Promise.all([
       withPrismaRetry(() => db.order.count()),
-      withPrismaRetry(() => db.order.count({ where: { status: 0 } })),
       withPrismaRetry(() =>
-        db.order.count({ where: { status: OrderStatus.OUT_FOR_DELIVERY } }),
+        db.order.count({
+          where: { status: toPrismaOrderStatus(OrderStatus.PENDING) },
+        }),
+      ),
+      withPrismaRetry(() =>
+        db.order.count({
+          where: {
+            status: toPrismaOrderStatus(OrderStatus.OUT_FOR_DELIVERY),
+          },
+        }),
       ),
       withPrismaRetry(() => db.user.count()),
       withPrismaRetry(() =>
@@ -433,7 +443,10 @@ export const backfillMissingProductSlugs = async (): Promise<
     let updatedCount = 0;
 
     for (const product of productsWithoutSlug) {
-      const nextSlug = await generateUniqueProductSlug(product.name, product.id);
+      const nextSlug = await generateUniqueProductSlug(
+        product.name,
+        product.id,
+      );
       const nextCategorySlug = slugify(String(product.category));
 
       await withPrismaRetry(() =>
@@ -554,7 +567,7 @@ export const getAdminOrders = async (
 
   const where = {
     AND: [
-      status === "ALL" ? {} : { status },
+      status === "ALL" ? {} : { status: toPrismaOrderStatus(status) },
       search
         ? {
             OR: [
@@ -615,7 +628,7 @@ export const getAdminOrders = async (
       userEmail: order.user.email,
       address: order.address,
       total: order.total,
-      status: order.status as AdminOrderStatus,
+      status: fromPrismaOrderStatus(order.status) as number as AdminOrderStatus,
       itemsCount: order._count.orderItems,
       createdAt: order.createdAt.toISOString(),
     }));
@@ -667,14 +680,19 @@ export const updateAdminOrderStatus = async (
       return actionError("Order not found.");
     }
 
-    if (!isValidOrderTransition(current.status, parsed.data.status)) {
+    if (
+      !isValidOrderTransition(
+        fromPrismaOrderStatus(current.status),
+        parsed.data.status,
+      )
+    ) {
       return actionError("Illegal order status transition.");
     }
 
     const updated = await withPrismaRetry(() =>
       db.order.update({
         where: { id: parsed.data.orderId },
-        data: { status: parsed.data.status },
+        data: { status: toPrismaOrderStatus(parsed.data.status) },
         select: {
           id: true,
           status: true,
@@ -683,11 +701,14 @@ export const updateAdminOrderStatus = async (
       }),
     );
 
-    await broadcastOrderStatusUpdate(updated.id, updated.status);
+    await broadcastOrderStatusUpdate(
+      updated.id,
+      fromPrismaOrderStatus(updated.status),
+    );
 
     return actionSuccess({
       id: updated.id,
-      status: updated.status as AdminOrderStatus,
+      status: fromPrismaOrderStatus(updated.status) as number as AdminOrderStatus,
       updatedAt: updated.updatedAt.toISOString(),
     });
   } catch {

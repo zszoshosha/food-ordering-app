@@ -51,7 +51,7 @@ const TrackOrderPage = async ({
           </p>
         </header>
 
-        <OrderTrackingClient orderId={order.id} initialStatus={order.status} />
+        <OrderTrackingClient orderId={order.id} initialStatus={+order.status} />
       </div>
     </main>
   );

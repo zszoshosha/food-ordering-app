@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { ReactElement, useEffect } from "react";
 
 type ErrorPageProps = {
   error: Error & { digest?: string };
@@ -12,7 +12,10 @@ type ErrorPageProps = {
  * Global App Router error boundary.
  * Keeps shell visible and allows retrying failed segment rendering.
  */
-export default function ErrorPage({ error, reset }: ErrorPageProps): JSX.Element {
+export default function ErrorPage({
+  error,
+  reset,
+}: ErrorPageProps): ReactElement {
   useEffect(() => {
     console.error("App error boundary caught:", error);
   }, [error]);
@@ -28,11 +31,14 @@ export default function ErrorPage({ error, reset }: ErrorPageProps): JSX.Element
             We hit an unexpected issue
           </h1>
           <p className="mt-4 text-muted-foreground">
-            The page failed to load correctly. Try again now, or return to the menu.
+            The page failed to load correctly. Try again now, or return to the
+            menu.
           </p>
 
           {error.digest ? (
-            <p className="mt-4 text-xs text-muted-foreground/80">Error ID: {error.digest}</p>
+            <p className="mt-4 text-xs text-muted-foreground/80">
+              Error ID: {error.digest}
+            </p>
           ) : null}
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

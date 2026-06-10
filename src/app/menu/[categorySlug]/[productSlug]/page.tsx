@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getMenuCatalogCached, getProductBySlugByDb } from "@/server/db/product";
+import {
+  getMenuCatalogCached,
+  getProductBySlugByDb,
+} from "@/server/db/product";
 import { slugify } from "@/lib/utils";
 
 const BRAND_NAME = "Pizza Palace";
@@ -21,7 +24,9 @@ interface MenuProductPageProps {
   params: Promise<MenuProductRouteParams>;
 }
 
-export async function generateStaticParams(): Promise<MenuProductRouteParams[]> {
+export async function generateStaticParams(): Promise<
+  MenuProductRouteParams[]
+> {
   const products = await getMenuCatalogCached();
 
   return products
@@ -96,7 +101,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function MenuProductPage({ params }: MenuProductPageProps) {
+export default async function MenuProductPage({
+  params,
+}: MenuProductPageProps) {
   const { categorySlug, productSlug } = await params;
   const product = await getProductByRouteSlugs(categorySlug, productSlug);
 

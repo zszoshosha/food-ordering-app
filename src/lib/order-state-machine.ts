@@ -1,3 +1,5 @@
+import { OrderStatus as PrismaOrderStatus } from "@prisma/client";
+
 export enum OrderStatus {
   PENDING = 0,
   CONFIRMED = 1,
@@ -6,6 +8,32 @@ export enum OrderStatus {
   DELIVERED = 4,
   CANCELLED = 5,
 }
+
+const NUMERIC_TO_PRISMA: Record<OrderStatus, PrismaOrderStatus> = {
+  [OrderStatus.PENDING]: PrismaOrderStatus.PENDING,
+  [OrderStatus.CONFIRMED]: PrismaOrderStatus.CONFIRMED,
+  [OrderStatus.PREPARING]: PrismaOrderStatus.PREPARING,
+  [OrderStatus.OUT_FOR_DELIVERY]: PrismaOrderStatus.OUT_FOR_DELIVERY,
+  [OrderStatus.DELIVERED]: PrismaOrderStatus.DELIVERED,
+  [OrderStatus.CANCELLED]: PrismaOrderStatus.CANCELLED,
+};
+
+const PRISMA_TO_NUMERIC: Record<PrismaOrderStatus, OrderStatus> = {
+  [PrismaOrderStatus.PENDING]: OrderStatus.PENDING,
+  [PrismaOrderStatus.CONFIRMED]: OrderStatus.CONFIRMED,
+  [PrismaOrderStatus.PREPARING]: OrderStatus.PREPARING,
+  [PrismaOrderStatus.OUT_FOR_DELIVERY]: OrderStatus.OUT_FOR_DELIVERY,
+  [PrismaOrderStatus.DELIVERED]: OrderStatus.DELIVERED,
+  [PrismaOrderStatus.CANCELLED]: OrderStatus.CANCELLED,
+};
+
+export const toPrismaOrderStatus = (
+  status: OrderStatus | number,
+): PrismaOrderStatus => NUMERIC_TO_PRISMA[status as OrderStatus];
+
+export const fromPrismaOrderStatus = (
+  status: PrismaOrderStatus,
+): OrderStatus => PRISMA_TO_NUMERIC[status];
 
 const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],

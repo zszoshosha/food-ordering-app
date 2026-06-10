@@ -91,7 +91,11 @@ export async function generateMetadata({
       canonical: buildLocalizedAbsoluteUrl(SITE_URL, locale, suffixPath),
       languages: {
         ...languages,
-        "x-default": buildLocalizedAbsoluteUrl(SITE_URL, locales[0], suffixPath),
+        "x-default": buildLocalizedAbsoluteUrl(
+          SITE_URL,
+          locales[0],
+          suffixPath,
+        ),
       },
     },
   };

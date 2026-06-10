@@ -2,7 +2,11 @@
 
 import { authOptions } from "@/server/auth";
 import { db, withPrismaRetry } from "@/lib/prisma";
-import { OrderStatus } from "@/lib/order-state-machine";
+import {
+  fromPrismaOrderStatus,
+  OrderStatus,
+  toPrismaOrderStatus,
+} from "@/lib/order-state-machine";
 import {
   ActionResponse,
   actionError,
@@ -57,7 +61,7 @@ export const getDeliveryOrders = async (): Promise<
     const orders = await withPrismaRetry(() =>
       db.order.findMany({
         where: {
-          status: OrderStatus.OUT_FOR_DELIVERY,
+          status: toPrismaOrderStatus(OrderStatus.OUT_FOR_DELIVERY),
         },
         orderBy: { createdAt: "asc" },
         include: {
@@ -115,21 +119,21 @@ export const markOrderDelivered = async (
     return actionError("Order not found.");
   }
 
-  if (existing.status !== OrderStatus.OUT_FOR_DELIVERY) {
+  if (fromPrismaOrderStatus(existing.status) !== OrderStatus.OUT_FOR_DELIVERY) {
     return actionError("Only out-for-delivery orders can be completed.");
   }
 
   const updated = await withPrismaRetry(() =>
     db.order.update({
       where: { id: parsed.data.orderId },
-      data: { status: OrderStatus.DELIVERED },
+      data: { status: toPrismaOrderStatus(OrderStatus.DELIVERED) },
       select: { id: true, status: true, updatedAt: true },
     }),
   );
 
   return actionSuccess({
     id: updated.id,
-    status: updated.status,
+    status: fromPrismaOrderStatus(updated.status),
     updatedAt: updated.updatedAt.toISOString(),
   });
 };

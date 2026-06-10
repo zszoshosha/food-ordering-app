@@ -29,12 +29,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const products = await getProductsByDb();
 
-  const dynamicProductRoutes: MetadataRoute.Sitemap = products.map((product) => ({
-    url: SITE_URL + "/menu/" + product.id,
-    lastModified: product.updateAt ?? product.createdAt ?? now,
-    changeFrequency: "daily",
-    priority: 0.8,
-  }));
+  const dynamicProductRoutes: MetadataRoute.Sitemap = products.map(
+    (product) => ({
+      url: SITE_URL + "/menu/" + product.id,
+      lastModified: product.updateAt ?? product.createdAt ?? now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    }),
+  );
 
   return [...staticRoutes, ...dynamicProductRoutes];
 }

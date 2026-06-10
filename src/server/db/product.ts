@@ -14,12 +14,17 @@ export const PRODUCT_CACHE_TAG = "product-cache";
  */
 export const getMenuCatalogCached = unstable_cache(
   cache(async (): Promise<ProductWithRelations[]> => {
-    return withPrismaRetry(() =>
-      db.product.findMany({
-        include: { sizes: true, extras: true },
-        orderBy: [{ order: "asc" }, { createdAt: "desc" }],
-      }),
-    );
+    try {
+      return await withPrismaRetry(() =>
+        db.product.findMany({
+          include: { sizes: true, extras: true },
+          orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to load menu catalog from database:", error);
+      return [] as ProductWithRelations[];
+    }
   }),
   ["menu-catalog"],
   {

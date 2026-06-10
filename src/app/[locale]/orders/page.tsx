@@ -75,12 +75,12 @@ const OrdersPage = async ({
 
                   <div className="text-right">
                     <p className="font-semibold">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(+order.total)}
                     </p>
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusStyles[order.status] ?? "bg-muted text-foreground"}`}
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusStyles[+order.status] ?? "bg-muted text-foreground"}`}
                     >
-                      {statusLabel[order.status] ?? "Unknown"}
+                      {statusLabel[+order.status] ?? "Unknown"}
                     </span>
                   </div>
                 </div>

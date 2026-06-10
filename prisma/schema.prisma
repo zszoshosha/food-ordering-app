@@ -9,20 +9,20 @@ datasource db {
 }
 
 model Product {
-  id          String          @id @default(cuid())
-  slug        String?         @unique
-  name        String
-  description String
-  image       String
-  basePrice   Float
-  updateAt    DateTime        @updatedAt
-  category    ProductCategory @default(CLASSIC)
+  id           String          @id @default(cuid())
+  slug         String?         @unique
+  name         String
+  description  String
+  image        String
+  basePrice    Float
+  updateAt     DateTime        @updatedAt
+  category     ProductCategory @default(CLASSIC)
   categorySlug String?
-  createdAt   DateTime        @default(now())
-  order       Int
-  extras      Extra[]
-  orderItems  OrderItem[]
-  sizes       Size[]
+  createdAt    DateTime        @default(now())
+  order        Int
+  extras       Extra[]
+  orderItems   OrderItem[]
+  sizes        Size[]
 
   @@index([category])
   @@index([categorySlug])

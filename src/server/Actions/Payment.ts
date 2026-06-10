@@ -2,9 +2,11 @@
 
 import { db, withPrismaRetry } from "../../lib/prisma";
 import {
+  fromPrismaOrderStatus,
   getOrderStatusLabel,
   isValidOrderTransition,
   OrderStatus,
+  toPrismaOrderStatus,
 } from "../../lib/order-state-machine";
 import { sendMockOrderConfirmationEmail } from "../../lib/notifications/mockEmail";
 import { getStripeClient, isStripeSimulationMode } from "../../lib/stripe";
@@ -61,11 +63,13 @@ export const markOrderPaid = async (
     return actionError("Order not found.");
   }
 
-  if (!isValidOrderTransition(order.status, OrderStatus.CONFIRMED)) {
-    if (order.status === OrderStatus.CONFIRMED) {
+  const currentStatus = fromPrismaOrderStatus(order.status);
+
+  if (!isValidOrderTransition(currentStatus, OrderStatus.CONFIRMED)) {
+    if (currentStatus === OrderStatus.CONFIRMED) {
       return actionSuccess({
         orderId: order.id,
-        status: order.status,
+        status: currentStatus,
         paymentIntentId: parsed.data.paymentIntentId,
       });
     }
@@ -77,7 +81,7 @@ export const markOrderPaid = async (
     db.order.update({
       where: { id: order.id },
       data: {
-        status: OrderStatus.CONFIRMED,
+        status: toPrismaOrderStatus(OrderStatus.CONFIRMED),
       },
       select: {
         id: true,
@@ -91,12 +95,12 @@ export const markOrderPaid = async (
     customerEmail: order.user.email,
     orderId: order.id,
     total: Number(order.total || 0),
-    statusLabel: getOrderStatusLabel(updated.status),
+    statusLabel: getOrderStatusLabel(fromPrismaOrderStatus(updated.status)),
   });
 
   return actionSuccess({
     orderId: updated.id,
-    status: updated.status,
+    status: fromPrismaOrderStatus(updated.status),
     paymentIntentId: parsed.data.paymentIntentId,
   });
 };
@@ -134,7 +138,7 @@ export const createPaymentIntentForOrder = async (
     return actionError("Order not found.");
   }
 
-  if (order.status !== OrderStatus.PENDING) {
+  if (fromPrismaOrderStatus(order.status) !== OrderStatus.PENDING) {
     return actionError(
       "Payment intent can only be created for pending orders.",
     );
