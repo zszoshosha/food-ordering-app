@@ -69,8 +69,8 @@ const requireAdminSession = async (): Promise<
 };
 
 const revalidatePublicMenuCache = () => {
-  revalidateTag(MENU_CACHE_TAG, "max");
-  revalidateTag(CATEGORY_CACHE_TAG, "max");
+  revalidateTag(MENU_CACHE_TAG);
+  revalidateTag(CATEGORY_CACHE_TAG);
 };
 
 const generateUniqueProductSlug = async (
@@ -708,7 +708,9 @@ export const updateAdminOrderStatus = async (
 
     return actionSuccess({
       id: updated.id,
-      status: fromPrismaOrderStatus(updated.status) as number as AdminOrderStatus,
+      status: fromPrismaOrderStatus(
+        updated.status,
+      ) as number as AdminOrderStatus,
       updatedAt: updated.updatedAt.toISOString(),
     });
   } catch {

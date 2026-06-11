@@ -2,7 +2,7 @@ import Stripe from "stripe";
 
 let stripeClient: Stripe | null = null;
 
-const STRIPE_API_VERSION = "2026-04-22.dahlia" as const;
+const STRIPE_API_VERSION = "2026-05-27.dahlia" as const;
 
 const getStripeSecretKey = () => {
   const secretKey = process.env.STRIPE_SECRET_KEY;
