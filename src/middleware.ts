@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
-import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
-// ⚠️ Keep in sync with i18n.config.ts (Edge isolation prevents importing it)
 const locales = ["ar", "en"] as const;
-const defaultLocale = "ar" as const; // Fixed: was "en", should match i18n.config.ts
+const defaultLocale = "ar" as const;
 
 const Routes = {
   PROFILE: "profile",
@@ -41,6 +40,28 @@ const getLocaleFromPath = (pathname: string) => {
   return (locales as readonly string[]).includes(first) ? first : defaultLocale;
 };
 
+// ✅ Edge-safe JWT decode — لا يلمس Prisma أبداً
+async function getTokenPayload(request: NextRequest) {
+  try {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
+
+    const cookieName =
+      process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token";
+
+    const token = request.cookies.get(cookieName)?.value;
+    if (!token) return null;
+
+    const secret_key = new TextEncoder().encode(secret);
+    const { payload } = await jwtVerify(token, secret_key);
+    return payload as { role?: string } | null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -49,7 +70,6 @@ export default async function middleware(request: NextRequest) {
   const locale = getLocaleFromPath(pathname);
   const normalizedPath = normalizePath(pathname);
 
-  // Redirect legacy auth paths
   if (legacyAuthPaths.has(normalizedPath)) {
     const destination = normalizedPath.endsWith("signin")
       ? "/login"
@@ -59,12 +79,8 @@ export default async function middleware(request: NextRequest) {
     );
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const token = await getTokenPayload(request);
 
-  // Redirect logged-in users away from login/register
   if (
     token &&
     (normalizedPath === "/login" || normalizedPath === "/register")
@@ -74,12 +90,10 @@ export default async function middleware(request: NextRequest) {
     );
   }
 
-  // Public paths — allow through
   if (publicPaths.has(normalizedPath)) {
     return intlMiddleware(request);
   }
 
-  // Authenticated: check admin access
   if (token) {
     if (
       routeStartsWith(normalizedPath, `/${Routes.ADMIN}`) &&
@@ -92,7 +106,6 @@ export default async function middleware(request: NextRequest) {
     return intlMiddleware(request);
   }
 
-  // Unauthenticated: redirect to login
   const signInUrl = new URL(`/${locale}/login`, request.url);
   signInUrl.searchParams.set(
     "callbackUrl",
