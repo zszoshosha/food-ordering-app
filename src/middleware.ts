@@ -1,28 +1,23 @@
 /**
- * Internationalization Proxy
- *
- * This proxy intercepts all incoming requests and handles locale detection/routing.
- * It automatically redirects users to their preferred locale (e.g., /en/menu, /ar/menu)
- * and ensures every route is prefixed with a valid locale segment.
- *
- * How it works:
- * 1. Checks the URL for a locale prefix (en, ar)
- * 2. If no locale is found, redirects to the default locale (English)
- * 3. The "always" prefix strategy means URLs always include the locale (e.g., /en/about)
+ * Internationalization & Auth Proxy (Middleware)
+ * Completely isolated from the local module graph to fix Vercel Edge tracing (.nft.json error).
  */
 import createMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
-import { locales, defaultLocale } from "./i18n/config";
 
-// Inlined from ./constants/enums — keep proxy free of local module graph for Edge tracing.
+// 1. Inlined i18n Config (To isolate the file completely)
+const locales = ["en", "ar"] as const;
+const defaultLocale = "en" as const;
+
+// 2. Inlined Routes
 const Routes = {
   PROFILE: "profile",
   ADMIN: "admin",
   UNAUTHORIZED: "unauthorized",
 } as const;
 
-// Inlined from ./lib/auth/roles
+// 3. Inlined Roles
 const AUTH_ROLES = {
   GUEST: "GUEST",
   CUSTOMER: "CUSTOMER",
@@ -33,13 +28,8 @@ const isAdminRole = (role?: string | null): boolean =>
   role === AUTH_ROLES.ADMIN;
 
 const intlMiddleware = createMiddleware({
-  // A list of all locales that are supported
-  locales,
-
-  // Used when no locale matches
+  locales: locales as unknown as string[],
   defaultLocale,
-
-  // Always use locale prefix in URLs (e.g., /en/menu instead of /menu)
   localePrefix: "always",
 });
 
@@ -47,19 +37,12 @@ const publicPaths = new Set(["/", "/login", "/register"]);
 const legacyAuthPaths = new Set(["/auth/signin", "/auth/signup"]);
 
 const shouldBypassProxy = (pathname: string) => {
-  if (pathname.startsWith("/_next")) {
+  if (pathname.startsWith("/_next") || pathname.startsWith("/api")) {
     return true;
   }
-
-  if (pathname.startsWith("/api")) {
-    return true;
-  }
-
-  // Skip requests for files like .js, .css, .woff2, images, etc.
   if (/\.[^/]+$/.test(pathname)) {
     return true;
   }
-
   return false;
 };
 
@@ -68,9 +51,7 @@ const routeStartsWith = (path: string, prefix: string) =>
 
 const normalizePath = (pathname: string) => {
   const segments = pathname.split("/").filter(Boolean);
-  const hasLocalePrefix = locales.includes(
-    segments[0] as (typeof locales)[number],
-  );
+  const hasLocalePrefix = (locales as readonly string[]).includes(segments[0]);
 
   if (!hasLocalePrefix) {
     return segments.length ? `/${segments.join("/")}` : "/";
@@ -82,12 +63,12 @@ const normalizePath = (pathname: string) => {
 
 const getLocaleFromPath = (pathname: string) => {
   const firstSegment = pathname.split("/").filter(Boolean)[0];
-  return locales.includes(firstSegment as (typeof locales)[number])
+  return (locales as readonly string[]).includes(firstSegment)
     ? firstSegment
     : defaultLocale;
 };
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   if (shouldBypassProxy(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
@@ -96,6 +77,7 @@ export default async function proxy(request: NextRequest) {
   const locale = getLocaleFromPath(request.nextUrl.pathname);
   const normalizedPath = normalizePath(request.nextUrl.pathname);
 
+  // Safe JWT token retrieval for Edge Runtime
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
@@ -112,7 +94,6 @@ export default async function proxy(request: NextRequest) {
         new URL(`/${locale}/${Routes.PROFILE}`, request.url),
       );
     }
-
     return response;
   }
 
@@ -122,11 +103,9 @@ export default async function proxy(request: NextRequest) {
         new URL(`/${locale}/${Routes.UNAUTHORIZED}`, request.url),
       );
     }
-
     return response;
   }
 
-  // Everything except public routes is private.
   const signInUrl = new URL(`/${locale}/login`, request.url);
   signInUrl.searchParams.set(
     "callbackUrl",
@@ -137,6 +116,5 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Match all page routes (with or without locale) while excluding API/static assets.
   matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
