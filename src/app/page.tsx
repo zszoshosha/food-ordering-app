@@ -29,7 +29,9 @@ type RestaurantSchema = {
   openingHoursSpecification: OpeningHoursSpecificationSchema[];
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://yourdomain.com";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "https://food-ordering-app-one-phi.vercel.app";
 
 const restaurantJsonLd: RestaurantSchema = {
   "@context": "https://schema.org",

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://yourdomain.com";
+const SITE_URL = "https://food-ordering-app-one-phi.vercel.app";
 
 export default function robots(): MetadataRoute.Robots {
   return {

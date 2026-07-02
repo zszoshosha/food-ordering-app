@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getProductsByDb } from "@/server/db/product";
 
-const SITE_URL = "https://yourdomain.com";
+const SITE_URL = "https://food-ordering-app-one-phi.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

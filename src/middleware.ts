@@ -17,7 +17,31 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
-const publicPaths = new Set(["/", "/login", "/register"]);
+const publicPaths = new Set([
+  // المسارات الأساسية بدون لغة
+  "/",
+  "/login",
+  "/register",
+  "/menu",
+  "/about",
+  "/contact",
+
+  // مسارات اللغة الإنجليزية (en)
+  "/en",
+  "/en/login",
+  "/en/register",
+  "/en/menu",
+  "/en/about",
+  "/en/contact",
+
+  // مسارات اللغة العربية (ar)
+  "/ar",
+  "/ar/login",
+  "/ar/register",
+  "/ar/menu",
+  "/ar/about",
+  "/ar/contact",
+]);
 const legacyAuthPaths = new Set(["/auth/signin", "/auth/signup"]);
 
 const shouldBypassProxy = (pathname: string) =>
