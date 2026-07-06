@@ -34,9 +34,5 @@ export const getStripeClient = () => {
 export const stripe = getStripeClient();
 
 export const isStripeSimulationMode = () => {
-  if (process.env.STRIPE_SIMULATION_MODE) {
-    return process.env.STRIPE_SIMULATION_MODE === "true";
-  }
-
-  return process.env.NODE_ENV !== "production";
+  return process.env.STRIPE_SIMULATION_MODE === "true";
 };

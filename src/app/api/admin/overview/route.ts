@@ -1,6 +1,5 @@
 import { AUTH_ROLES } from "@/lib/auth/roles";
-import { authOptions } from "@/server/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { getAdminOverview } from "../../../../server/Actions/Admin";
 import { NextResponse } from "next/server";
 
@@ -9,7 +8,7 @@ import { NextResponse } from "next/server";
  */
 export async function GET() {
   // Secondary gate at the route level in addition to middleware/action checks.
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },

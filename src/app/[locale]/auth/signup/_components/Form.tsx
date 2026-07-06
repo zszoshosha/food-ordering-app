@@ -9,6 +9,7 @@ import { Translations } from "@/types/translations";
 import { useParams, useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const initialState: SignupState = {
   errors: {},
@@ -63,14 +64,11 @@ function Form({ translation }: { translation: Translations }) {
           </div>
         );
       })}
-      <Button
-        type="submit"
-        disabled={pending}
-        className="w-full padding-0 mt-4 "
-        size="lg"
-      >
-        {translation.auth.register.submit}
-      </Button>
+      <SubmitButton
+        text={translation.auth.register.submit}
+        loadingText="Registering..."
+        className="w-full mt-4"
+      />
     </form>
   );
 }

@@ -1,10 +1,26 @@
-"use client";
-import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { ProductCategory } from "@prisma/client";
 import MainHeading from "@/components/main-heading";
 import Menu from "@/components/menu";
+import { db, withPrismaRetry } from "@/lib/prisma";
 import { ProductWithRelations } from "@/types/Product";
-import { Button } from "@/components/ui/button";
-import { useTranslations } from "next-intl";
+
+type MenuPageParams = {
+  locale: string;
+};
+
+type MenuPageSearchParams = {
+  search?: string;
+  category?: string;
+  page?: string;
+};
+
+type MenuPageProps = {
+  params: Promise<MenuPageParams>;
+  searchParams: Promise<MenuPageSearchParams>;
+};
+
+const ITEMS_PER_PAGE = 6;
 
 const DEFAULT_CATEGORY_IDS = [
   "CLASSIC",
@@ -12,7 +28,7 @@ const DEFAULT_CATEGORY_IDS = [
   "VEGETARIAN",
   "MEAT",
   "SEAFOOD",
-];
+] as const;
 
 const CATEGORY_ICONS: Record<string, string> = {
   ALL: "🍕",
@@ -23,189 +39,242 @@ const CATEGORY_ICONS: Record<string, string> = {
   SEAFOOD: "🦐",
 };
 
-const CATEGORY_TRANSLATION_KEY: Record<string, string> = {
-  CLASSIC: "categories.classic",
-  SPECIALTY: "categories.specialty",
-  VEGETARIAN: "categories.vegetarian",
-  MEAT: "categories.meat",
-  SEAFOOD: "categories.seafood",
+const CATEGORY_LABELS: Record<string, string> = {
+  ALL: "All Pizzas",
+  CLASSIC: "Classic",
+  SPECIALTY: "Specialty",
+  VEGETARIAN: "Vegetarian",
+  MEAT: "Meat",
+  SEAFOOD: "Seafood",
 };
 
-/**
- * Menu page component with category filtering.
- * Displays all menu items organized by categories.
- */
-export default function MenuPage() {
-  const t = useTranslations("menu");
-  const [products, setProducts] = useState<ProductWithRelations[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<
-    ProductWithRelations[]
-  >([]);
-  const [activeCategory, setActiveCategory] = useState("ALL");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc");
-  const [loading, setLoading] = useState(true);
-  const [hasFetchError, setHasFetchError] = useState(false);
-  const [availableCategoryIds, setAvailableCategoryIds] =
-    useState<string[]>(DEFAULT_CATEGORY_IDS);
+const isMenuCategory = (value: string): value is ProductCategory =>
+  DEFAULT_CATEGORY_IDS.includes(value as ProductCategory);
 
-  const categories = [
-    {
-      id: "ALL",
-      name: t("categories.all"),
-      icon: CATEGORY_ICONS.ALL,
-    },
-    ...availableCategoryIds.map((categoryId) => ({
-      id: categoryId,
-      name: CATEGORY_TRANSLATION_KEY[categoryId]
-        ? t(CATEGORY_TRANSLATION_KEY[categoryId])
-        : categoryId,
-      icon: CATEGORY_ICONS[categoryId] ?? "🍽️",
-    })),
-  ];
+const buildMenuHref = (
+  locale: string,
+  options: {
+    search: string;
+    category: string;
+    page: number;
+  },
+) => {
+  const params = new URLSearchParams();
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    setHasFetchError(false);
+  if (options.search) {
+    params.set("search", options.search);
+  }
 
-    try {
-      const [productsResponse, categoriesResponse] = await Promise.all([
-        fetch("/api/products", { cache: "force-cache" }),
-        fetch("/api/products/categories", { cache: "force-cache" }),
-      ]);
+  if (options.category !== "ALL") {
+    params.set("category", options.category);
+  }
 
-      if (!productsResponse.ok) {
-        throw new Error("Failed to fetch products");
-      }
+  if (options.page > 1) {
+    params.set("page", String(options.page));
+  }
 
-      const data: ProductWithRelations[] = await productsResponse.json();
-      setProducts(data);
+  const query = params.toString();
+  return query ? `/${locale}/menu?${query}` : `/${locale}/menu`;
+};
 
-      if (categoriesResponse.ok) {
-        const fetchedCategories = (await categoriesResponse.json()) as string[];
-        if (fetchedCategories.length > 0) {
-          setAvailableCategoryIds(fetchedCategories);
+export default async function MenuPage({
+  params,
+  searchParams,
+}: MenuPageProps) {
+  const [{ locale }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+
+  const search = resolvedSearchParams.search?.trim() ?? "";
+  const requestedCategory =
+    resolvedSearchParams.category?.trim().toUpperCase() ?? "ALL";
+  const category =
+    requestedCategory === "ALL" || isMenuCategory(requestedCategory)
+      ? requestedCategory
+      : "ALL";
+
+  const requestedPage = Number.parseInt(resolvedSearchParams.page ?? "1", 10);
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const where = {
+    ...(search
+      ? {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              description: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
         }
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setProducts([]);
-      setHasFetchError(true);
-    } finally {
-      setLoading(false);
-    }
+      : {}),
+    ...(category !== "ALL"
+      ? {
+          category: category as ProductCategory,
+        }
+      : {}),
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const totalItems = await withPrismaRetry(() => db.product.count({ where }));
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
 
-  useEffect(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const next = products
-      .filter((product) =>
-        activeCategory === "ALL" ? true : product.category === activeCategory,
-      )
-      .filter((product) => {
-        if (!normalizedSearch) return true;
-        return (
-          product.name.toLowerCase().includes(normalizedSearch) ||
-          product.description.toLowerCase().includes(normalizedSearch)
-        );
-      })
-      .sort((a, b) => {
-        const minA = Math.min(...a.sizes.map((s) => Number(s.price || 0)), 0);
-        const minB = Math.min(...b.sizes.map((s) => Number(s.price || 0)), 0);
-        const priceA = Number(a.basePrice || 0) + minA;
-        const priceB = Number(b.basePrice || 0) + minB;
+  const products: ProductWithRelations[] = await withPrismaRetry(() =>
+    db.product.findMany({
+      where,
+      include: {
+        sizes: true,
+        extras: true,
+      },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      skip: (safePage - 1) * ITEMS_PER_PAGE,
+      take: ITEMS_PER_PAGE,
+    }),
+  );
 
-        switch (sortBy) {
-          case "price-asc":
-            return priceA - priceB;
-          case "price-desc":
-            return priceB - priceA;
-          case "name-desc":
-            return b.name.localeCompare(a.name);
-          case "name-asc":
-          default:
-            return a.name.localeCompare(b.name);
-        }
-      });
-
-    setFilteredProducts(next);
-  }, [products, activeCategory, searchTerm, sortBy]);
+  const categoryOptions = ["ALL", ...DEFAULT_CATEGORY_IDS];
 
   return (
     <main className="py-10 md:py-14 page-surface">
       <div className="container mx-auto px-4">
-        <MainHeading title={t("title")} subTitle={t("subtitle")} />
+        <MainHeading title="Our Menu" subTitle="Explore" />
 
         <div className="mt-8 mb-6 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-4 max-w-4xl mx-auto">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder={t("searchPlaceholder")}
-            className="w-full h-11 rounded-xl border border-border bg-white/70 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
-            aria-label={t("searchAria")}
-          />
+          <form action={`/${locale}/menu`} method="get" className="contents">
+            <input type="hidden" name="category" value={category} />
+            <input type="hidden" name="page" value="1" />
+            <input
+              type="search"
+              name="search"
+              defaultValue={search}
+              placeholder="Search by pizza name or ingredient..."
+              className="w-full h-11 rounded-xl border border-border bg-white/70 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
+              aria-label="Search pizzas"
+            />
+          </form>
 
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="h-11 rounded-xl border border-border bg-white/70 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
-            aria-label={t("sortAria")}
-          >
-            <option value="name-asc">{t("sort.nameAsc")}</option>
-            <option value="name-desc">{t("sort.nameDesc")}</option>
-            <option value="price-asc">{t("sort.priceAsc")}</option>
-            <option value="price-desc">{t("sort.priceDesc")}</option>
-          </select>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-1">
+            <div className="h-11 rounded-xl border border-border bg-white/70 px-3 text-sm text-muted-foreground flex items-center">
+              Page {safePage} of {totalPages}
+            </div>
+          </div>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12 mt-8">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              variant={activeCategory === category.id ? "default" : "outline"}
-              className="min-w-30 rounded-full"
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {categoryOptions.map((categoryId) => {
+            const href = buildMenuHref(locale, {
+              search,
+              category: categoryId,
+              page: 1,
+            });
+            const isActive = category === categoryId;
+
+            return (
+              <Link
+                key={categoryId}
+                href={href}
+                className={`inline-flex min-w-30 items-center justify-center rounded-full border px-5 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-white/70 text-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                <span className="mr-2">{CATEGORY_ICONS[categoryId]}</span>
+                {CATEGORY_LABELS[categoryId] ?? categoryId}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mb-6 text-center text-sm text-muted-foreground">
+          Showing{" "}
+          <span className="font-semibold text-primary">{products.length}</span>{" "}
+          of <span className="font-semibold text-primary">{totalItems}</span>{" "}
+          items
+          {search ? (
+            <>
+              {" "}
+              for{" "}
+              <span className="font-semibold text-foreground">"{search}"</span>
+            </>
+          ) : null}
+          {category !== "ALL" ? (
+            <>
+              {" "}
+              in{" "}
+              <span className="font-semibold text-foreground">{category}</span>
+            </>
+          ) : null}
+        </div>
+
+        {products.length > 0 ? (
+          <Menu items={products} />
+        ) : (
+          <div className="text-center py-16">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+              No products found
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Try another search term or clear the category filter.
+            </p>
+            <Link
+              href={`/${locale}/menu`}
+              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
-              <span className="mr-2">{category.icon}</span>
-              {category.name}
-            </Button>
-          ))}
+              Reset Filters
+            </Link>
+          </div>
+        )}
+
+        <div className="mt-10 flex items-center justify-between gap-4 flex-wrap">
+          <div className="text-sm text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </div>
+          <div className="flex items-center gap-3">
+            {safePage > 1 ? (
+              <Link
+                href={buildMenuHref(locale, {
+                  search,
+                  category,
+                  page: safePage - 1,
+                })}
+                className="inline-flex items-center justify-center rounded-full border border-border bg-white/70 px-4 py-2 text-sm font-medium hover:border-primary hover:text-primary"
+              >
+                Previous
+              </Link>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-full border border-border bg-white/40 px-4 py-2 text-sm font-medium text-muted-foreground">
+                Previous
+              </span>
+            )}
+
+            {safePage < totalPages ? (
+              <Link
+                href={buildMenuHref(locale, {
+                  search,
+                  category,
+                  page: safePage + 1,
+                })}
+                className="inline-flex items-center justify-center rounded-full border border-border bg-white/70 px-4 py-2 text-sm font-medium hover:border-primary hover:text-primary"
+              >
+                Next
+              </Link>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-full border border-border bg-white/40 px-4 py-2 text-sm font-medium text-muted-foreground">
+                Next
+              </span>
+            )}
+          </div>
         </div>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">{t("loading")}</p>
-          </div>
-        )}
-
-        {/* Menu Items */}
-        {!loading && filteredProducts.length > 0 && (
-          <Menu items={filteredProducts} />
-        )}
-
-        {/* No Products */}
-        {!loading && hasFetchError && (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">{t("error")}</p>
-            <Button onClick={fetchProducts} className="mt-5 rounded-full">
-              {t("retry")}
-            </Button>
-          </div>
-        )}
-
-        {/* No Products */}
-        {!loading && !hasFetchError && filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">{t("empty")}</p>
-          </div>
-        )}
       </div>
     </main>
   );

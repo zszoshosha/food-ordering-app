@@ -1,7 +1,7 @@
 "use server";
 
+import { auth } from "@/auth";
 import { db, withPrismaRetry } from "../../lib/prisma";
-import { authOptions } from "../auth";
 import {
   AdminOrderListItem,
   AdminOrderStatus,
@@ -30,7 +30,6 @@ import {
   adminUsersQuerySchema,
 } from "../../validation/admin";
 import { UserRole } from "@prisma/client";
-import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
 import * as z from "zod";
 import { CATEGORY_CACHE_TAG, MENU_CACHE_TAG } from "../../server/db/product";
@@ -58,7 +57,7 @@ const toValidationErrors = (
 const requireAdminSession = async (): Promise<
   ActionResponse<{ userId: string }>
 > => {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const user = session?.user as { id?: string; role?: string } | undefined;
 
   if (!user?.id || user.role !== "ADMIN") {

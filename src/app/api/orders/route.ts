@@ -1,6 +1,5 @@
 import { createOrder, getUserOrders } from "@/server/Actions/Order";
-import { authOptions } from "@/server/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 const getErrorStatus = (
@@ -15,7 +14,7 @@ const getErrorStatus = (
 };
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -43,7 +42,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return NextResponse.json(

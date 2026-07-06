@@ -1,6 +1,5 @@
 import { markOrderPaid } from "@/server/Actions/Payment";
-import { authOptions } from "@/server/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 const getErrorStatus = (
@@ -16,7 +15,7 @@ const getErrorStatus = (
 };
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return NextResponse.json(

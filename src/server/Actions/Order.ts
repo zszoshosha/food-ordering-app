@@ -8,7 +8,7 @@ import {
   actionSuccess,
 } from "../../types/action-response";
 import {
-  checkoutSchema,
+  checkoutSchema as MutationSchema,
   type CheckoutInput,
   type CheckoutItemInput,
 } from "../../validation/checkout";
@@ -59,26 +59,45 @@ export const createOrder = async (
   userId: string,
   payload: unknown,
 ): Promise<
-  ActionResponse<{
-    id: string;
-    total: number;
-    createdAt: Date;
-  }>
+  | {
+      success: true;
+      message: string;
+      data: {
+        id: string;
+        total: number;
+        createdAt: Date;
+      };
+    }
+  | {
+      success: false;
+      message: string;
+      errors?: Record<string, string[]>;
+      error: string;
+      validationErrors?: Record<string, string[]>;
+    }
 > => {
   const parsedUserId = userIdSchema.safeParse(userId);
   if (!parsedUserId.success) {
-    return actionError("Invalid user id.");
+    return {
+      success: false,
+      message: "Invalid user id.",
+      error: "Invalid user id.",
+    };
   }
 
-  const parsed = checkoutSchema.safeParse(payload);
-  if (!parsed.success) {
-    return actionError(
-      "Invalid checkout payload.",
-      parsed.error.flatten().fieldErrors,
-    );
+  const validatedFields = MutationSchema.safeParse(payload);
+  if (!validatedFields.success) {
+    const validationErrors = validatedFields.error.flatten().fieldErrors;
+    return {
+      success: false,
+      message: "Invalid checkout payload.",
+      error: "Invalid checkout payload.",
+      errors: validationErrors,
+      validationErrors,
+    };
   }
 
-  const data = parsed.data;
+  const data = validatedFields.data;
   const productIds = [...new Set(data.items.map((item) => item.productId))];
 
   const products = await withPrismaRetry(() =>
@@ -96,7 +115,11 @@ export const createOrder = async (
   );
 
   if (products.length !== productIds.length) {
-    return actionError("One or more cart items are no longer available.");
+    return {
+      success: false,
+      message: "One or more cart items are no longer available.",
+      error: "One or more cart items are no longer available.",
+    };
   }
 
   try {
@@ -123,9 +146,11 @@ export const createOrder = async (
     const total = Number((subtotal + tax).toFixed(2));
 
     if (Math.abs(total - data.total) > 0.01) {
-      return actionError(
-        "Cart total changed. Please review your cart and try again.",
-      );
+      return {
+        success: false,
+        message: "Cart total changed. Please review your cart and try again.",
+        error: "Cart total changed. Please review your cart and try again.",
+      };
     }
 
     const createdOrder = await createOrderByDb({
@@ -135,14 +160,22 @@ export const createOrder = async (
       orderItems: pricedItems,
     });
 
-    return actionSuccess({
-      id: createdOrder.id,
-      total: createdOrder.total,
-      createdAt: createdOrder.createdAt,
-    });
+    return {
+      success: true,
+      message: "Order created successfully.",
+      data: {
+        id: createdOrder.id,
+        total: createdOrder.total,
+        createdAt: createdOrder.createdAt,
+      },
+    };
   } catch (error) {
     console.error("Create order failed:", error);
-    return actionError("Failed to create order. Please try again.");
+    return {
+      success: false,
+      message: "Failed to create order. Please try again.",
+      error: "Failed to create order. Please try again.",
+    };
   }
 };
 

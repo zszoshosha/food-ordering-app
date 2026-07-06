@@ -21,6 +21,21 @@ import {
 } from "../../validation/stripe";
 import Stripe from "stripe";
 
+const toHalalas = (amount: number) => {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  const [whole, fraction = ""] = amount.toFixed(2).split(".");
+  const amountInHalalas = Number(whole) * 100 + Number(fraction);
+
+  if (!Number.isFinite(amountInHalalas) || amountInHalalas <= 0) {
+    return null;
+  }
+
+  return amountInHalalas;
+};
+
 export const markOrderPaid = async (
   orderId: string,
   paymentIntentId: string,
@@ -162,27 +177,63 @@ export const createPaymentIntentForOrder = async (
     return actionError("Stripe is not configured.");
   }
 
-  const intent = await stripe.paymentIntents.create({
-    amount: Math.round(Number(order.total) * 100),
-    currency: "usd",
-    metadata: {
-      orderId: order.id,
-    },
-    automatic_payment_methods: {
-      enabled: true,
-    },
-  });
-
-  if (!intent.client_secret) {
-    return actionError("Stripe did not return a client secret.");
+  const amountInHalalas = toHalalas(Number(order.total));
+  if (!amountInHalalas) {
+    return actionError("Order total is invalid for payment processing.");
   }
 
-  return actionSuccess({
-    orderId: order.id,
-    paymentIntentId: intent.id,
-    clientSecret: intent.client_secret,
-    simulated: false,
-  });
+  const idempotencyKey = `payment_intent_${order.id}_${amountInHalalas}`;
+
+  try {
+    const intent = await stripe.paymentIntents.create(
+      {
+        amount: amountInHalalas,
+        currency: "sar",
+        metadata: {
+          orderId: order.id,
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      },
+      {
+        idempotencyKey,
+      },
+    );
+
+    if (!intent.client_secret) {
+      return actionError("Stripe did not return a client secret.");
+    }
+
+    return actionSuccess({
+      orderId: order.id,
+      paymentIntentId: intent.id,
+      clientSecret: intent.client_secret,
+      simulated: false,
+    });
+  } catch (error) {
+    if (error instanceof Stripe.errors.StripeAuthenticationError) {
+      return actionError("Stripe authentication failed.");
+    }
+
+    if (error instanceof Stripe.errors.StripeConnectionError) {
+      return actionError("Could not connect to Stripe. Please try again.");
+    }
+
+    if (error instanceof Stripe.errors.StripeRateLimitError) {
+      return actionError("Stripe rate limit reached. Please retry shortly.");
+    }
+
+    if (error instanceof Stripe.errors.StripeInvalidRequestError) {
+      return actionError("Invalid Stripe payment intent request.");
+    }
+
+    if (error instanceof Stripe.errors.StripeError) {
+      return actionError(error.message || "Stripe payment failed.");
+    }
+
+    return actionError("Failed to create payment intent.");
+  }
 };
 
 export const handleStripeWebhookEvent = async (

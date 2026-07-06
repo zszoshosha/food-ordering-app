@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Manrope, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
-import { Sonner } from "@/components/ui/sonner";
-import { Analytics } from "@vercel/analytics/next"
-
+import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
+import { getCurrentLocale } from "@/lib/getCurrentLocale";
 
 /**
  * Body font configuration for the application.
@@ -50,15 +50,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getCurrentLocale();
+  const isArabic = locale === "ar";
   return (
-    <html lang="en" dir="ltr">
+    <html lang={locale || "en"} dir={isArabic ? "rtl" : "ltr"}>
       <body
         className={`${manrope.variable} ${playfairDisplay.variable} ${manrope.className}`}
       >
         {/* ReduxProvider wraps everything to enable global state (cart, etc.) */}
         <ReduxProvider>
           {children}
-          <Sonner />
+          <Toaster />
         </ReduxProvider>
       </body>
     </html>

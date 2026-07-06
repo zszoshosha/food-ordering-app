@@ -1,7 +1,6 @@
 import { Routes } from "@/constants/enums";
 import { AuthRole } from "@/lib/auth/roles";
-import { authOptions } from "@/server/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 /**
@@ -9,7 +8,7 @@ import { redirect } from "next/navigation";
  * Redirects to localized sign-in page when the user is not logged in.
  */
 export const requireAuth = async (locale: string, requiredRole?: AuthRole) => {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session) {
     redirect(`/${locale}/login`);

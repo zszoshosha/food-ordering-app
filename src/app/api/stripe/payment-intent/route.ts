@@ -1,6 +1,5 @@
 import { createPaymentIntentForOrder } from "@/server/Actions/Payment";
-import { authOptions } from "@/server/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 const getErrorStatus = (
@@ -9,6 +8,9 @@ const getErrorStatus = (
 ) => {
   if (error === "Unauthorized") return 401;
   if (validationErrors) return 400;
+  if (/rate limit/i.test(error)) return 429;
+  if (/could not connect to stripe/i.test(error)) return 503;
+  if (/authentication failed/i.test(error)) return 502;
   if (/not found/i.test(error)) return 404;
   if (/failed|not configured/i.test(error)) return 500;
   if (/pending/i.test(error)) return 409;
@@ -16,7 +18,7 @@ const getErrorStatus = (
 };
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return NextResponse.json(

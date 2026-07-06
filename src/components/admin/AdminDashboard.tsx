@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/formatters";
+import { CldUploadButton } from "next-cloudinary";
 import {
   AdminOverview,
   AdminOrderListItem,
@@ -548,35 +549,6 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
   };
 
   /**
-   * Uploads an image and updates the product form with returned URL.
-   */
-  const handleImageUpload = async (file: File) => {
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-
-    const uploadPromise = fetch("/api/upload", {
-      method: "POST",
-      body: uploadData,
-    });
-
-    toast.promise(uploadPromise, {
-      loading: "Uploading image...",
-      success: "Image uploaded",
-      error: "Image upload failed",
-    });
-
-    const response = await uploadPromise;
-
-    if (!response.ok) {
-      const payload = (await response.json()) as { error?: string };
-      throw new Error(payload.error ?? "Image upload failed.");
-    }
-
-    const payload = (await response.json()) as { imageUrl: string };
-    setProductForm((prev) => ({ ...prev, image: payload.imageUrl }));
-  };
-
-  /**
    * Persists product create/update changes via admin API.
    */
   const submitProduct = async () => {
@@ -971,7 +943,15 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => removeProduct(product.id)}
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  "Are you sure you want to delete this product?",
+                                )
+                              ) {
+                                removeProduct(product.id);
+                              }
+                            }}
                           >
                             Delete
                           </Button>
@@ -1359,35 +1339,50 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
 
               <div className="space-y-2">
                 <Label htmlFor="product-image-url">Image URL</Label>
-                <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+                <div className="grid gap-2">
+                  <input type="hidden" name="image" value={productForm.image} />
                   <Input
                     id="product-image-url"
                     value={productForm.image}
                     readOnly
                     placeholder="Image URL"
                   />
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) {
+                  <CldUploadButton
+                    uploadPreset={
+                      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+                    }
+                    options={{ multiple: false }}
+                    onSuccess={(result) => {
+                      const secureUrl =
+                        typeof result.info === "object" &&
+                        result.info !== null &&
+                        "secure_url" in result.info
+                          ? String(result.info.secure_url ?? "")
+                          : "";
+
+                      if (!secureUrl) {
+                        toast.error("Image upload failed.");
                         return;
                       }
 
-                      try {
-                        clearProductFieldError("image");
-                        await handleImageUpload(file);
-                      } catch (error) {
-                        const message =
-                          error instanceof Error
-                            ? error.message
-                            : "Image upload failed.";
-                        toast.error(message);
-                      }
+                      clearProductFieldError("image");
+                      setProductForm((prev) => ({ ...prev, image: secureUrl }));
+                      toast.success("Image uploaded");
                     }}
-                    className="max-w-full md:max-w-xs"
-                  />
+                    onError={() => {
+                      toast.error("Image upload failed.");
+                    }}
+                    className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  >
+                    Upload image
+                  </CldUploadButton>
+                  {productForm.image ? (
+                    <img
+                      src={productForm.image}
+                      alt="Product preview"
+                      className="h-16 w-16 rounded-md border object-cover"
+                    />
+                  ) : null}
                 </div>
                 {productFormErrors.image ? (
                   <p className="text-sm text-destructive">

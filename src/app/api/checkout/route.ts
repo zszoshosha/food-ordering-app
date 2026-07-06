@@ -1,7 +1,6 @@
-import { authOptions } from "@/server/auth";
+import { auth } from "@/auth";
 import { db, withPrismaRetry } from "@/lib/prisma";
 import { getStripeClient } from "@/lib/stripe";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { z } from "zod";
@@ -69,7 +68,7 @@ const calculateUnitAmountInMinorCurrency = (
 };
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   try {
     const payload = checkoutPayloadSchema.safeParse(await request.json());

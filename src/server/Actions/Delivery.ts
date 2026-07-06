@@ -1,6 +1,6 @@
 "use server";
 
-import { authOptions } from "@/server/auth";
+import { auth } from "@/auth";
 import { db, withPrismaRetry } from "@/lib/prisma";
 import {
   fromPrismaOrderStatus,
@@ -13,7 +13,6 @@ import {
   actionSuccess,
 } from "@/types/action-response";
 import { deliveryOrderIdSchema } from "@/validation/delivery";
-import { getServerSession } from "next-auth";
 
 /**
  * Validates an authenticated delivery/admin session.
@@ -21,7 +20,7 @@ import { getServerSession } from "next-auth";
 const requireDeliverySession = async (): Promise<
   ActionResponse<{ userId: string }>
 > => {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const user = session?.user as { id?: string; role?: string } | undefined;
   const role = user?.role;
 
