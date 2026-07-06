@@ -17,7 +17,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProductWithRelations } from "@/types/Product";
 import { Size, Extra, ProductSize } from "@prisma/client";
-import { useState, useMemo } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import {
   addCartItem,
   removeCartItem,
@@ -44,6 +44,19 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
     null;
   const [selectedSize, setSelectedSize] = useState<Size | null>(defaultSize);
   const itemQuantity = getCartItemQuantity(item.id, cart);
+  const [optimisticResetVersion, setOptimisticResetVersion] = useState(0);
+  const [optimisticQuantity, applyOptimisticQuantity] = useOptimistic(
+    { quantity: itemQuantity, resetVersion: optimisticResetVersion },
+    (currentState, action: { type: "increase" | "decrease" }) => ({
+      ...currentState,
+      quantity:
+        action.type === "increase"
+          ? currentState.quantity + 1
+          : Math.max(0, currentState.quantity - 1),
+    }),
+  );
+  const [isPending, startTransition] = useTransition();
+  const displayedQuantity = optimisticQuantity.quantity;
   const totalPrice = useMemo(() => {
     const extrasTotal = selectedExtra.reduce(
       (sum, extra) => sum + Number(extra?.price || 0),
@@ -56,24 +69,41 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
     );
   }, [item.basePrice, selectedSize?.price, selectedExtra]);
 
-  const handleAddToCart = () => {
-    const toastId = toast.loading("Adding item to cart...");
+  const handleCartMutation = (type: "increase" | "decrease") => {
+    const toastId = toast.loading(
+      type === "increase" ? "Adding item to cart..." : "Updating cart...",
+    );
 
-    try {
-      dispatch(
-        addCartItem({
-          size: selectedSize ?? undefined,
-          extras: selectedExtra,
-          basePrice: item.basePrice,
-          name: item.name,
-          id: item.id,
-          image: item.image,
-        }),
-      );
-      toast.success("Added to cart.", { id: toastId });
-    } catch {
-      toast.error("Failed to update cart.", { id: toastId });
-    }
+    startTransition(() => {
+      applyOptimisticQuantity({ type });
+
+      try {
+        if (type === "increase") {
+          dispatch(
+            addCartItem({
+              size: selectedSize ?? undefined,
+              extras: selectedExtra,
+              basePrice: item.basePrice,
+              name: item.name,
+              id: item.id,
+              image: item.image,
+            }),
+          );
+        } else {
+          dispatch(removeCartItem({ id: item.id }));
+        }
+
+        toast.success(
+          type === "increase" ? "Added to cart." : "Cart updated.",
+          {
+            id: toastId,
+          },
+        );
+      } catch {
+        setOptimisticResetVersion((current) => current + 1);
+        toast.error("Failed to update cart.", { id: toastId });
+      }
+    });
   };
   return (
     <Dialog>
@@ -124,17 +154,22 @@ const AddToCartButton = ({ item }: { item: ProductWithRelations }) => {
             </div>
           </div>
           <DialogFooter>
-            {itemQuantity === 0 ? (
-              <Button type="submit" onClick={handleAddToCart}>
+            {displayedQuantity === 0 ? (
+              <Button
+                type="submit"
+                onClick={() => handleCartMutation("increase")}
+                disabled={isPending}
+              >
                 Add to Cart {formatCurrency(totalPrice)}
               </Button>
             ) : (
               <ChooseQuantity
                 item={item}
-                selectedSize={selectedSize}
-                selectedExtra={selectedExtra}
                 totalPrice={totalPrice}
-                itemQuantity={itemQuantity}
+                itemQuantity={displayedQuantity}
+                isPending={isPending}
+                onIncrease={() => handleCartMutation("increase")}
+                onDecrease={() => handleCartMutation("decrease")}
               />
             )}
           </DialogFooter>
@@ -237,50 +272,19 @@ function Extras({
  */
 const ChooseQuantity = ({
   item,
-  selectedSize,
-  selectedExtra,
   totalPrice,
   itemQuantity,
+  isPending,
+  onIncrease,
+  onDecrease,
 }: {
   item: ProductWithRelations;
-  selectedSize: Size | null;
-  selectedExtra: Extra[];
   totalPrice: number;
   itemQuantity: number;
+  isPending: boolean;
+  onIncrease: () => void;
+  onDecrease: () => void;
 }) => {
-  const dispatch = useAppDispatch();
-
-  const handleIncrease = () => {
-    const toastId = toast.loading("Updating cart...");
-
-    try {
-      dispatch(
-        addCartItem({
-          size: selectedSize ?? undefined,
-          extras: selectedExtra,
-          basePrice: item.basePrice,
-          name: item.name,
-          id: item.id,
-          image: item.image,
-        }),
-      );
-      toast.success("Cart updated.", { id: toastId });
-    } catch {
-      toast.error("Failed to update cart.", { id: toastId });
-    }
-  };
-
-  const handleDecrease = () => {
-    const toastId = toast.loading("Updating cart...");
-
-    try {
-      dispatch(removeCartItem({ id: item.id }));
-      toast.success("Cart updated.", { id: toastId });
-    } catch {
-      toast.error("Failed to update cart.", { id: toastId });
-    }
-  };
-
   return (
     <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-3 bg-muted/40 border border-border rounded-full px-3 py-2">
@@ -289,7 +293,7 @@ const ChooseQuantity = ({
           variant="secondary"
           size="sm"
           className="rounded-full w-9 h-9 p-0"
-          onClick={handleDecrease}
+          onClick={onDecrease}
           disabled={itemQuantity <= 1}
         >
           -
@@ -302,7 +306,8 @@ const ChooseQuantity = ({
           variant="secondary"
           size="sm"
           className="rounded-full w-9 h-9 p-0"
-          onClick={handleIncrease}
+          onClick={onIncrease}
+          disabled={isPending}
         >
           +
         </Button>
@@ -310,8 +315,9 @@ const ChooseQuantity = ({
 
       <Button
         type="button"
-        onClick={handleIncrease}
+        onClick={onIncrease}
         className="w-full sm:w-auto"
+        disabled={isPending}
       >
         Add More {formatCurrency(totalPrice)}
       </Button>

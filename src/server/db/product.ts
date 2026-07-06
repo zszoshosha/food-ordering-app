@@ -1,37 +1,15 @@
 import { Cache } from "@/lib/cache";
 import { db, withPrismaRetry } from "@/lib/prisma";
 import { ProductWithRelations } from "@/types/Product";
-import { unstable_cache } from "next/cache";
-import { cache } from "react";
+import { getMenuItemsCached, MENU_CACHE_TAG } from "./menu";
 
-export const MENU_CACHE_TAG = "menu-data";
 export const CATEGORY_CACHE_TAG = "categories-cache";
 export const PRODUCT_CACHE_TAG = "product-cache";
 
 /**
- * Example of combining React request deduping and Next persistent caching.
- * Use this in server components to heavily cache the menu catalog for 1 hour.
+ * Backward-compatible export for the cached menu query.
  */
-export const getMenuCatalogCached = unstable_cache(
-  cache(async (): Promise<ProductWithRelations[]> => {
-    try {
-      return await withPrismaRetry(() =>
-        db.product.findMany({
-          include: { sizes: true, extras: true },
-          orderBy: [{ order: "asc" }, { createdAt: "desc" }],
-        }),
-      );
-    } catch (error) {
-      console.error("Failed to load menu catalog from database:", error);
-      return [] as ProductWithRelations[];
-    }
-  }),
-  ["menu-catalog"],
-  {
-    revalidate: 3600,
-    tags: [MENU_CACHE_TAG],
-  },
-);
+export const getMenuCatalogCached = getMenuItemsCached;
 
 /**
  * Fetches all products with their sizes and extras from the database.

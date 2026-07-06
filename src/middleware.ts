@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { getToken } from "next-auth/jwt";
+import { AUTH_ROLES, isAdminRole } from "@/lib/auth/roles";
 
 const locales = ["ar", "en"] as const;
 const defaultLocale = "ar" as const;
@@ -8,6 +9,7 @@ const defaultLocale = "ar" as const;
 const Routes = {
   PROFILE: "profile",
   ADMIN: "admin",
+  CHECKOUT: "checkout",
   UNAUTHORIZED: "unauthorized",
 } as const;
 
@@ -64,27 +66,36 @@ const getLocaleFromPath = (pathname: string) => {
   return (locales as readonly string[]).includes(first) ? first : defaultLocale;
 };
 
-// ✅ Edge-safe JWT decode — لا يلمس Prisma أبداً
-async function getTokenPayload(request: NextRequest) {
-  try {
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) return null;
+const buildCallbackUrl = (request: NextRequest) =>
+  `${request.nextUrl.pathname}${request.nextUrl.search}`;
 
-    const cookieName =
-      process.env.NODE_ENV === "production"
-        ? "__Secure-next-auth.session-token"
-        : "next-auth.session-token";
+const buildLocaleUrl = (
+  locale: string,
+  pathname: string,
+  request: NextRequest,
+) => new URL(`/${locale}${pathname}`, request.url);
 
-    const token = request.cookies.get(cookieName)?.value;
-    if (!token) return null;
+const buildLoginRedirect = (request: NextRequest, locale: string) => {
+  const url = buildLocaleUrl(locale, "/login", request);
+  url.searchParams.set("callbackUrl", buildCallbackUrl(request));
+  return url;
+};
 
-    const secret_key = new TextEncoder().encode(secret);
-    const { payload } = await jwtVerify(token, secret_key);
-    return payload as { role?: string } | null;
-  } catch {
-    return null;
-  }
-}
+const buildUnauthorizedRedirect = (request: NextRequest, locale: string) =>
+  buildLocaleUrl(locale, `/${Routes.UNAUTHORIZED}`, request);
+
+const isProtectedRoute = (pathname: string) =>
+  routeStartsWith(pathname, `/${Routes.ADMIN}`) ||
+  routeStartsWith(pathname, `/${Routes.CHECKOUT}`) ||
+  routeStartsWith(pathname, `/${Routes.PROFILE}`);
+
+const resolveToken = async (request: NextRequest) => {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+  return token ?? null;
+};
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -98,20 +109,31 @@ export default async function middleware(request: NextRequest) {
     const destination = normalizedPath.endsWith("signin")
       ? "/login"
       : "/register";
-    return NextResponse.redirect(
-      new URL(`/${locale}${destination}`, request.url),
-    );
+    return NextResponse.redirect(buildLocaleUrl(locale, destination, request));
   }
 
-  const token = await getTokenPayload(request);
+  const token = await resolveToken(request);
 
   if (
     token &&
     (normalizedPath === "/login" || normalizedPath === "/register")
   ) {
     return NextResponse.redirect(
-      new URL(`/${locale}/${Routes.PROFILE}`, request.url),
+      buildLocaleUrl(locale, `/${Routes.PROFILE}`, request),
     );
+  }
+
+  if (isProtectedRoute(normalizedPath)) {
+    if (!token) {
+      return NextResponse.redirect(buildLoginRedirect(request, locale));
+    }
+
+    if (
+      routeStartsWith(normalizedPath, `/${Routes.ADMIN}`) &&
+      !isAdminRole(token.role)
+    ) {
+      return NextResponse.redirect(buildUnauthorizedRedirect(request, locale));
+    }
   }
 
   if (publicPaths.has(normalizedPath)) {
@@ -119,25 +141,12 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (token) {
-    if (
-      routeStartsWith(normalizedPath, `/${Routes.ADMIN}`) &&
-      token.role !== "ADMIN"
-    ) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/${Routes.UNAUTHORIZED}`, request.url),
-      );
-    }
     return intlMiddleware(request);
   }
 
-  const signInUrl = new URL(`/${locale}/login`, request.url);
-  signInUrl.searchParams.set(
-    "callbackUrl",
-    `${pathname}${request.nextUrl.search}`,
-  );
-  return NextResponse.redirect(signInUrl);
+  return NextResponse.redirect(buildLoginRedirect(request, locale));
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|.*\\..*).*)"],
 };
