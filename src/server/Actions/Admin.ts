@@ -32,7 +32,7 @@ import {
 import { UserRole } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import * as z from "zod";
-import { CATEGORY_CACHE_TAG, MENU_CACHE_TAG } from "../../server/db/product";
+import { CATEGORY_CACHE_TAG } from "../../server/db/product";
 import { broadcastOrderStatusUpdate } from "@/lib/pusher-server";
 import { slugify } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ const requireAdminSession = async (): Promise<
 };
 
 const revalidatePublicMenuCache = () => {
-  revalidateTag(MENU_CACHE_TAG);
+  revalidateTag("menu");
   revalidateTag(CATEGORY_CACHE_TAG);
 };
 
