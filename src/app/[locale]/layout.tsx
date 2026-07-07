@@ -19,7 +19,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ||
   "https://food-ordering-app-one-phi.vercel.app";
 
 type LocaleLayoutParams = {
