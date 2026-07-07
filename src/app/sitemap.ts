@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getProductsByDb } from "@/server/db/product";
 
-const SITE_URL = "https://food-ordering-app-one-phi.vercel.app";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  "https://food-ordering-app-one-phi.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -29,14 +31,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const products = await getProductsByDb();
 
-  const dynamicProductRoutes: MetadataRoute.Sitemap = products.map(
-    (product) => ({
-      url: SITE_URL + "/menu/" + product.id,
+  const dynamicProductRoutes: MetadataRoute.Sitemap = products
+    .filter((product) => product.categorySlug && product.slug)
+    .map((product) => ({
+      url: SITE_URL + "/menu/" + product.categorySlug + "/" + product.slug,
       lastModified: product.updateAt ?? product.createdAt ?? now,
       changeFrequency: "daily",
       priority: 0.8,
-    }),
-  );
+    }));
 
   return [...staticRoutes, ...dynamicProductRoutes];
 }

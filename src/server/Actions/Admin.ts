@@ -31,7 +31,6 @@ import {
 } from "../../validation/admin";
 import { UserRole } from "@prisma/client";
 import { revalidateTag } from "next/cache";
-import * as z from "zod";
 import { CATEGORY_CACHE_TAG } from "../../server/db/product";
 import { broadcastOrderStatusUpdate } from "@/lib/pusher-server";
 import { slugify } from "@/lib/utils";
@@ -84,12 +83,11 @@ const generateUniqueProductSlug = async (
 
     const existing = await withPrismaRetry(() =>
       db.product.findFirst({
-        where: {
-          slug: candidate,
-          ...(excludeProductId ? { id: { not: excludeProductId } } : {}),
-        } as never,
+        where: excludeProductId
+          ? { slug: candidate, id: { not: excludeProductId } }
+          : { slug: candidate },
         select: { id: true },
-      } as never),
+      }),
     );
 
     if (!existing) {
@@ -427,7 +425,7 @@ export const backfillMissingProductSlugs = async (): Promise<
       db.product.findMany({
         where: {
           OR: [{ slug: null }, { slug: "" }],
-        } as never,
+        },
         select: {
           id: true,
           name: true,
@@ -436,7 +434,7 @@ export const backfillMissingProductSlugs = async (): Promise<
         orderBy: {
           createdAt: "asc",
         },
-      } as never),
+      }),
     );
 
     let updatedCount = 0;
@@ -454,8 +452,8 @@ export const backfillMissingProductSlugs = async (): Promise<
           data: {
             slug: nextSlug,
             categorySlug: nextCategorySlug,
-          } as never,
-        } as never),
+          },
+        }),
       );
 
       updatedCount += 1;

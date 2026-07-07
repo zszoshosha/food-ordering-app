@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/formatters";
 import { CldUploadButton } from "next-cloudinary";
+import Image from "next/image";
 import {
   AdminOverview,
   AdminOrderListItem,
@@ -1377,9 +1378,11 @@ const AdminDashboard = ({ locale }: AdminDashboardProps) => {
                     Upload image
                   </CldUploadButton>
                   {productForm.image ? (
-                    <img
+                    <Image
                       src={productForm.image}
                       alt="Product preview"
+                      width={64}
+                      height={64}
                       className="h-16 w-16 rounded-md border object-cover"
                     />
                   ) : null}

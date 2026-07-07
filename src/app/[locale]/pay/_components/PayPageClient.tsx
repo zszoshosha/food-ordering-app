@@ -20,7 +20,6 @@ import { toast } from "sonner";
  */
 const PayPageClient = ({ locale }: { locale: string }) => {
   const t = useTranslations("checkout");
-  const tCart = useTranslations("cart");
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);

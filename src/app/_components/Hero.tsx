@@ -17,7 +17,9 @@ const Hero = () => {
       container grid grid-cols-1 md:grid-cols-2"
       >
         <div className="md:py-12 flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary mb-4">slice into happiness</h1>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary mb-4">
+            slice into happiness
+          </h1>
           <p className="text-lg text-muted-foreground mb-6">
             Lorem ipsum, dolor sit amet consectetur adipisicing elit. Ipsam
             incidunt commodi magni reprehenderit quo officiis fuga obcaecati
@@ -48,7 +50,6 @@ const Hero = () => {
             fill
             priority
             className="object-contain drop-shadow-lg"
-            loading="eager"
           />
         </div>
       </div>

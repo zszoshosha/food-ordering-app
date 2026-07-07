@@ -102,9 +102,9 @@ export const getProductBySlugByDb = Cache(
     try {
       return await withPrismaRetry(() =>
         db.product.findFirst({
-          where: { slug } as never,
+          where: { slug },
           include: { sizes: true, extras: true },
-        } as never),
+        }),
       );
     } catch (error) {
       console.error(`Failed to load product slug ${slug}:`, error);

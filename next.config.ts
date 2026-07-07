@@ -6,10 +6,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client", "bcrypt", "bcryptjs"],
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "encrypted-tbn0.gstatic.com" },
-    ],
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },
 };
 

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Manrope, Playfair_Display } from "next/font/google";
-import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -33,6 +32,9 @@ export const metadata: Metadata = {
   title: "Pizza Palace - Delicious Pizza Delivery",
   description:
     "Order authentic Italian pizzas and delicious food online. Fast delivery with fresh quality ingredients.",
+  verification: {
+    google: "O8Z4g9fWMHQRFM0wOIrvlJhRXDHQ4RUzbFWRvd86o00",
+  },
 };
 
 /**

@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
@@ -130,8 +130,8 @@ model Account {
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -164,6 +164,7 @@ enum Extraingredient {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PREPARING
   OUT_FOR_DELIVERY
   DELIVERED

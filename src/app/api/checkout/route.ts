@@ -1,16 +1,10 @@
 import { auth } from "@/auth";
 import { db, withPrismaRetry } from "@/lib/prisma";
 import { getStripeClient } from "@/lib/stripe";
+import { checkoutItemSchema } from "@/validation/checkout";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { z } from "zod";
-
-const checkoutItemSchema = z.object({
-  productId: z.string().cuid(),
-  quantity: z.number().int().min(1).max(20),
-  sizeId: z.string().cuid().optional(),
-  extraIds: z.array(z.string().cuid()).optional().default([]),
-});
 
 const checkoutPayloadSchema = z.object({
   orderId: z.string().cuid(),
