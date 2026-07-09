@@ -13,7 +13,6 @@ import Footer from "@/components/footer";
 import Header from "@/components/header";
 import { locales } from "@/i18n/config";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -31,73 +30,24 @@ type LocaleLayoutProps = Readonly<{
   params: Promise<LocaleLayoutParams>;
 }>;
 
-const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
-
-const getPathnameFromHeaders = (requestHeaders: Headers): string => {
-  const rawPath =
-    requestHeaders.get("x-pathname") ||
-    requestHeaders.get("next-url") ||
-    requestHeaders.get("x-invoke-path") ||
-    "/";
-
-  const pathWithoutQuery = rawPath.split("?")[0] || "/";
-  return pathWithoutQuery.startsWith("/")
-    ? pathWithoutQuery
-    : "/" + pathWithoutQuery;
-};
-
-const stripLocalePrefix = (pathname: string): string => {
-  const segments = pathname.split("/").filter(Boolean);
-  if (!segments.length) {
-    return "/";
-  }
-
-  const firstSegment = segments[0];
-  const isLocaleSegment = locales.includes(
-    firstSegment as (typeof locales)[number],
-  );
-
-  const rest = isLocaleSegment ? segments.slice(1) : segments;
-  return rest.length ? "/" + rest.join("/") : "/";
-};
-
-const buildLocalizedAbsoluteUrl = (
-  baseUrl: string,
-  locale: string,
-  suffixPath: string,
-) => {
-  const normalizedBase = trimTrailingSlash(baseUrl);
-  const normalizedSuffix = suffixPath === "/" ? "" : suffixPath;
-  return normalizedBase + "/" + locale + normalizedSuffix;
-};
-
 export async function generateMetadata({
   params,
 }: {
   params: Promise<LocaleLayoutParams>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const requestHeaders = await headers();
-  const pathname = getPathnameFromHeaders(requestHeaders);
-  const suffixPath = stripLocalePrefix(pathname);
 
   const languages = Object.fromEntries(
-    locales.map((supportedLocale) => [
-      supportedLocale,
-      buildLocalizedAbsoluteUrl(SITE_URL, supportedLocale, suffixPath),
-    ]),
+    locales.map((supportedLocale) => [supportedLocale, `/${supportedLocale}`]),
   );
 
   return {
+    metadataBase: new URL(SITE_URL),
     alternates: {
-      canonical: buildLocalizedAbsoluteUrl(SITE_URL, locale, suffixPath),
+      canonical: `/${locale}`,
       languages: {
         ...languages,
-        "x-default": buildLocalizedAbsoluteUrl(
-          SITE_URL,
-          locales[0],
-          suffixPath,
-        ),
+        "x-default": `/${locales[0]}`,
       },
     },
     verification: {
