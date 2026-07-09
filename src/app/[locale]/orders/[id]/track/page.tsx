@@ -3,6 +3,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { requireAuth } from "@/lib/requireAuth";
 import { getUserOrderById } from "@/server/Actions/Order";
 import OrderTrackingClient from "./_components/OrderTrackingClient";
+import { notFound } from "next/navigation";
 
 const TrackOrderPage = async ({
   params,
@@ -25,13 +26,7 @@ const TrackOrderPage = async ({
   const result = await getUserOrderById(session.user.id, id);
 
   if (!result.success || !result.data) {
-    return (
-      <main className="min-h-screen p-6 md:p-10">
-        <div className="mx-auto max-w-3xl rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700">
-          {result.success ? "Order not found." : result.error}
-        </div>
-      </main>
-    );
+    notFound();
   }
 
   const order = result.data;
