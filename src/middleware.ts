@@ -90,11 +90,38 @@ const isProtectedRoute = (pathname: string) =>
   routeStartsWith(pathname, `/${Routes.PROFILE}`);
 
 const resolveToken = async (request: NextRequest) => {
-  const token = await getToken({
+  // 1. Try standard retrieval first
+  let token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
-  return token ?? null;
+  if (token) return token;
+
+  // 2. If no token found, check if secure cookie fallback is needed (production, HTTPS, or contains __Secure cookie)
+  const isSecure =
+    process.env.NODE_ENV === "production" ||
+    request.nextUrl.protocol === "https:" ||
+    request.headers.get("x-forwarded-proto") === "https" ||
+    request.cookies.has("__Secure-next-auth.session-token");
+
+  if (isSecure) {
+    token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: true,
+    });
+    if (token) return token;
+  } else {
+    // Try secure token anyways as a robust fallback
+    token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: true,
+    });
+    if (token) return token;
+  }
+
+  return null;
 };
 
 export default async function middleware(request: NextRequest) {

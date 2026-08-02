@@ -71,6 +71,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return session;
     },
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Allows relative URLs
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+
+      // Allows URLs on the same origin or hostname to support production custom domains and reverse proxies
+      try {
+        const parsedUrl = new URL(url);
+        const parsedBaseUrl = new URL(baseUrl);
+        if (
+          parsedUrl.origin === parsedBaseUrl.origin ||
+          parsedUrl.hostname === parsedBaseUrl.hostname
+        ) {
+          return url;
+        }
+      } catch {
+        // Fallback
+      }
+
+      return baseUrl;
+    },
   },
   providers: [
     Credentials({
